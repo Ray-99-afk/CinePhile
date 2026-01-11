@@ -1,0 +1,362 @@
+/* =========================================
+   1. GLOBAL & RESET
+   ========================================= */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Roboto Condensed', sans-serif; 
+}
+
+body { 
+    background-color: #1a1a1a; 
+    color: white; 
+    overflow-x: hidden; 
+}
+
+/* =========================================
+   2. NAVIGATION BAR (Only visible on Index)
+   ========================================= */
+nav {
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    padding: 15px 40px;
+    background: #00000033; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: fixed; 
+    width: 100%; 
+    top: 0; 
+    z-index: 9999; 
+}
+
+nav a { text-decoration: none; }
+
+.logo { 
+    font-size: 1.5rem; 
+    border: 2px solid white; 
+    padding: 5px 15px; 
+    font-weight: bold; 
+    text-transform: uppercase;
+    color: white;
+    letter-spacing: 3px;
+}
+
+/* =========================================
+   3. HOME PAGE HERO
+   ========================================= */
+#home-hero {
+    height: 100vh;
+    background: url('UI/image_1.jpg') no-repeat center center/cover; 
+    display: flex; 
+    justify-content: right; 
+    align-items: center;
+    padding-right: 100px;
+    box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 0.4);
+}
+
+.ticket-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 300px;
+    height: 80px;
+    padding: 0 30px;
+    background: linear-gradient(135deg, #FFD700, #ffb84d); 
+    color: #1a1a1a; 
+    text-decoration: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    -webkit-mask: 
+        radial-gradient(circle at 0 50%, transparent 10px, black 11px) top left, 
+        radial-gradient(circle at 100% 50%, transparent 10px, black 11px) top right;
+    -webkit-mask-size: 51% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask: 
+        radial-gradient(circle at 0 50%, transparent 10px, black 11px) top left, 
+        radial-gradient(circle at 100% 50%, transparent 10px, black 11px) top right;
+    mask-size: 51% 100%;
+    mask-repeat: no-repeat;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 184, 77, 0.6);
+}
+
+.ticket-text {
+    font-size: 1.5rem;
+    border-right: 2px dashed rgba(0, 0, 0, 0.4); 
+    padding-right: 10px; 
+    display: flex;
+    align-items: center;     
+    justify-content: center; 
+    flex-grow: 1; 
+    height: 100%;
+}
+
+.ticket-stub {
+    font-size: 1.2rem;
+    padding-left: 15px;
+    font-weight: 800; 
+}
+
+.ticket-btn:hover {
+    transform: scale(1.05) rotate(-2deg); 
+    background: linear-gradient(135deg, #ffe033, #ffc766); 
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 184, 77, 0.4);
+}
+
+/* =========================================
+   4. LOGIN PAGE - FULL SCREEN (No Nav)
+   ========================================= */
+
+#auth-section {
+    width: 100%;
+    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Container */
+.auth-container {
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    padding-top: 0; /* No navbar, so no top padding needed */
+}
+
+/* Floating Back Button */
+.back-btn {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    z-index: 2000;
+    font-size: 1.1rem;
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.3s;
+}
+
+.back-btn:hover {
+    color: #FFD700;
+    transform: translateX(-5px);
+}
+
+/* Content */
+.auth-container p {
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.3px;
+    margin: 20px 0;
+    color: #333;
+}
+
+.auth-container span {
+    font-size: 12px;
+    color: #333;
+}
+
+.auth-container a {
+    color: #333;
+    font-size: 13px;
+    text-decoration: none;
+    margin: 15px 0 10px;
+}
+
+/* Form Buttons */
+.auth-btn {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-size: 12px;
+    padding: 10px 45px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.auth-btn:hover {
+    background-color: #FFD700;
+    color: #000;
+}
+
+.auth-btn.transparent {
+    background-color: transparent;
+    border-color: #fff;
+}
+
+.auth-btn.transparent:hover {
+    background-color: #fff;
+    color: #b38b00;
+}
+
+/* --- FORMS --- */
+.auth-form-container {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    transition: all 0.6s ease-in-out;
+}
+
+.auth-form {
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 50px;
+    height: 100%;
+    color: #333;
+}
+
+.auth-form h1 {
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 2rem;
+    color: #1a1a1a;
+}
+
+.auth-social-icons { margin: 20px 0; }
+
+.auth-icon {
+    border: 1px solid #ccc;
+    border-radius: 20%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    width: 40px;
+    height: 40px;
+    color: #333;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.auth-icon:hover {
+    background-color: #FFD700;
+    border-color: #FFD700;
+    color: white;
+}
+
+/* Inputs */
+.auth-input-box {
+    position: relative;
+    width: 100%;
+    max-width: 400px; 
+    margin: 10px 0;
+}
+
+.auth-input-box input {
+    background-color: #f0f0f0;
+    border: none;
+    margin: 0;
+    padding: 12px 15px 12px 45px;
+    font-size: 14px;
+    border-radius: 8px;
+    width: 100%;
+    outline: none;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+.auth-input-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 18px;
+}
+
+/* --- ANIMATION LOGIC --- */
+.sign-in {
+    left: 0;
+    width: 50%;
+    z-index: 2;
+}
+.auth-container.active .sign-in { transform: translateX(100%); }
+
+.sign-up {
+    left: 0;
+    width: 50%;
+    opacity: 0;
+    z-index: 1;
+}
+.auth-container.active .sign-up {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 5;
+    animation: move 0.6s;
+}
+
+@keyframes move {
+    0%, 49.99% { opacity: 0; z-index: 1; }
+    50%, 100% { opacity: 1; z-index: 5; }
+}
+
+/* --- GOLDEN SLIDER (FULL HEIGHT & CURVED) --- */
+.auth-toggle-container {
+    position: absolute;
+    top: 0; /* Starts from the top */
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.6s ease-in-out;
+    border-radius: 150px 0 0 100px; /* Restored Curve */
+    z-index: 1000;
+}
+.auth-container.active .auth-toggle-container {
+    transform: translateX(-100%);
+    border-radius: 0 150px 100px 0;
+}
+
+.auth-toggle {
+    height: 100%;
+    background: linear-gradient(to right, #b38b00, #ffc800);
+    color: #fff;
+    position: relative;
+    left: -100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: all 0.6s ease-in-out;
+}
+.auth-container.active .auth-toggle { transform: translateX(50%); }
+
+.auth-toggle-panel {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 30px;
+    text-align: center;
+    top: 0;
+    transform: translateX(0);
+    transition: all 0.6s ease-in-out;
+}
+
+.auth-toggle-left { transform: translateX(-200%); }
+.auth-container.active .auth-toggle-left { transform: translateX(0); }
+
+.auth-toggle-right { right: 0; transform: translateX(0); }
+.auth-container.active .auth-toggle-right { transform: translateX(200%); }
+
+/* Mobile Logic */
+@media (max-width: 768px) {
+    .auth-container { display: flex; flex-direction: column; overflow-y: auto; }
+    .sign-in, .sign-up { width: 100%; position: relative; height: auto; padding: 40px; }
+    .auth-toggle-container { display: none; }
+    .sign-up { opacity: 1; z-index: 2; margin-top: 20px; }
+}

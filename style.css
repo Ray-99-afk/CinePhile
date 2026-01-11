@@ -360,3 +360,149 @@ nav a { text-decoration: none; }
     .auth-toggle-container { display: none; }
     .sign-up { opacity: 1; z-index: 2; margin-top: 20px; }
 }
+
+
+
+
+/* ----------------------------------------- */
+
+/* =========================================
+   5. DASHBOARD - SPLIT SCREEN LAYOUT
+   ========================================= */
+
+.dashboard-body {
+    background-color: #000;
+    overflow: hidden; /* No scrolling allowed */
+    height: 100vh;
+}
+
+/* Navbar specific for Dashboard (Centered Logo) */
+.dash-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0,0,0,0.8);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2); /* Faint gold line */
+}
+
+/* The Container holding the 3 panels */
+/* Find this part in your CSS and update the padding */
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    
+    /* CHANGE THIS: Increase from 70px to 100px to clear the navbar */
+    padding-top: 100px; 
+    
+    /* OPTIONAL: Add this to ensure the background dark color fills the gap */
+    background-color: #000; 
+}
+
+/* Common Style for Each Section */
+.split-section {
+    position: relative;
+    flex: 1; /* All start with equal width */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth expansion */
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Remove border from last item */
+.split-section:last-child {
+    border-right: none;
+}
+
+/* --- BACKGROUND IMAGES (You need to add these images to UI folder) --- */
+.series {
+    /* Placeholder Gradient until you add an image */
+    background: url('UI/series_bg.jpg') no-repeat center center/cover;
+    background-color: #1a1a1a; 
+}
+
+.movies {
+    background: url('UI/movies_bg.jpg') no-repeat center center/cover;
+    background-color: #222; 
+}
+
+.fun {
+    background: url('UI/games_bg.jpg') no-repeat center center/cover;
+    background-color: #1a1a1a; 
+}
+
+/* Dark Overlay to make text pop */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    transition: background 0.4s;
+}
+
+/* --- TEXT STYLING --- */
+.split-section h2 {
+    position: relative;
+    z-index: 10;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    letter-spacing: 5px;
+    transition: transform 0.4s, color 0.4s;
+}
+
+.split-section p {
+    position: relative;
+    z-index: 10;
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 1.2rem;
+    color: #FFD700; /* Gold Text */
+    opacity: 0; /* Hidden initially */
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+/* --- HOVER EFFECTS ( The Magic ) --- */
+
+/* When hovering a section, it expands */
+.split-section:hover {
+    flex: 2.5; /* Takes up 2.5x more space than others */
+}
+
+/* Lighten the background on hover */
+.split-section:hover .overlay {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Text Effects on Hover */
+.split-section:hover h2 {
+    color: #FFD700; /* Turns Gold */
+    transform: scale(1.1);
+}
+
+.split-section:hover p {
+    opacity: 1; /* Description appears */
+    transform: translateY(0);
+}
+
+/* Mobile Fix: Stack them vertically */
+@media (max-width: 768px) {
+    .split-container {
+        flex-direction: column;
+    }
+    .split-section {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+}

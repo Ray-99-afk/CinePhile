@@ -382,12 +382,15 @@ nav a { text-decoration: none; }
     justify-content: center;
     align-items: center;
     padding: 20px;
-    background: rgba(0,0,0,0.8);
+    
+    /* CHANGE: Use a gradient fade instead of solid black */
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 100%);
+    
+    border-bottom: none; 
     position: fixed;
     width: 100%;
     top: 0;
     z-index: 1000;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2); /* Faint gold line */
 }
 
 /* The Container holding the 3 panels */
@@ -397,11 +400,8 @@ nav a { text-decoration: none; }
     width: 100%;
     height: 100vh;
     
-    /* CHANGE THIS: Increase from 70px to 100px to clear the navbar */
-    padding-top: 100px; 
-    
-    /* OPTIONAL: Add this to ensure the background dark color fills the gap */
-    background-color: #000; 
+    /* CHANGE: Remove the padding so images touch the top */
+    padding-top: 0; 
 }
 
 /* Common Style for Each Section */
@@ -424,21 +424,27 @@ nav a { text-decoration: none; }
     border-right: none;
 }
 
-/* --- BACKGROUND IMAGES (You need to add these images to UI folder) --- */
+/* Update these 3 classes to shift images down by 60px */
+
 .series {
-    /* Placeholder Gradient until you add an image */
     background: url('UI/series_bg.jpg') no-repeat center center/cover;
     background-color: #1a1a1a; 
+    /* NEW: Shift image down by 80px so the face isn't hidden */
+    background-position: center 80px; 
 }
 
 .movies {
     background: url('UI/movies_bg.jpg') no-repeat center center/cover;
     background-color: #222; 
+    /* NEW: Shift image down */
+    background-position: center 80px;
 }
 
 .fun {
     background: url('UI/games_bg.jpg') no-repeat center center/cover;
     background-color: #1a1a1a; 
+    /* NEW: Shift image down */
+    background-position: center 80px;
 }
 
 /* Dark Overlay to make text pop */

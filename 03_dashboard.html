@@ -4,38 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CinePhile - Select Mode</title>
-        <link rel="icon" href="UI/mainlogo.png" type="image/jpeg">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="dashboard-body">
+    <link rel="icon" href="mainlogo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root { --gold: #FFD700; --bg: #080808; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Roboto Condensed',sans-serif; color:#fff; cursor:none; }
 
-    <nav class="dash-nav">
-        <div class="logo">CINEPHILE</div>
+        .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); transition:width .3s,height .3s; mix-blend-mode:difference; }
+        .cursor-ring { position:fixed; width:36px; height:36px; border:1px solid rgba(255,215,0,.5); border-radius:50%; pointer-events:none; z-index:99998; transform:translate(-50%,-50%); transition:width .3s,height .3s,border-color .3s; }
+
+        body::after { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9000; opacity:.5; }
+
+        nav { position:fixed; top:0; left:0; right:0; z-index:1000; padding:28px 48px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(to bottom,rgba(0,0,0,.85) 0%,transparent 100%); }
+
+        .logo-link { text-decoration:none; color:#fff; opacity:0; animation:fadeDown .7s 1.8s forwards; }
+        .logo { font-family:'Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:5px; border:2px solid #fff; padding:4px 14px; transition:border-color .3s,color .3s; }
+        .logo-link:hover .logo { border-color:var(--gold); color:var(--gold); }
+
+        .nav-hint { font-size:.75rem; letter-spacing:3px; color:rgba(255,255,255,.35); text-transform:uppercase; opacity:0; animation:fadeDown .7s 2s forwards; }
+        .nav-spacer { width:130px; }
+
+        .panels { display:flex; width:100%; height:100%; }
+
+        .panel { position:relative; flex:1; height:100%; overflow:hidden; cursor:none; transition:flex .7s cubic-bezier(.77,0,.18,1); opacity:0; transform:scaleY(.96); animation:panelIn .8s cubic-bezier(.25,1,.5,1) forwards; }
+        .panel-series { animation-delay:.8s; }
+        .panel-movies  { animation-delay:1s; }
+        .panel-arcade  { animation-delay:1.2s; }
+
+        .panels:has(.panel:hover) .panel:not(:hover) { flex:.45; }
+        .panel:hover { flex:2.5; }
+
+        .panel-bg { position:absolute; inset:-5%; background-size:cover; background-position:center; transition:transform .8s cubic-bezier(.77,0,.18,1),filter .5s; filter:brightness(.45) saturate(.7); will-change:transform; }
+        .panel:hover .panel-bg { transform:scale(1.06); filter:brightness(.65) saturate(1.1); }
+
+        .panel-series .panel-bg { background-image:url('series_bg.jpg'); background-position:center 20%; }
+        .panel-movies .panel-bg { background-image:url('movies_bg0.jpg'); background-position:center 30%; }
+        .panel-arcade .panel-bg { background-image:url('games_bg0.png'); background-position:center 25%; }
+
+        .panel-vignette { position:absolute; inset:0; opacity:0; transition:opacity .5s; }
+        .panel:hover .panel-vignette { opacity:1; }
+        .panel-series .panel-vignette { background:linear-gradient(135deg,rgba(80,120,200,.15) 0%,transparent 60%); }
+        .panel-movies .panel-vignette { background:linear-gradient(135deg,rgba(229,9,20,.12) 0%,transparent 60%); }
+        .panel-arcade .panel-vignette { background:linear-gradient(135deg,rgba(100,60,200,.15) 0%,transparent 60%); }
+
+        .panel-grad { position:absolute; bottom:0; left:0; right:0; height:65%; background:linear-gradient(to top,rgba(0,0,0,.96) 0%,rgba(0,0,0,.5) 50%,transparent 100%); }
+
+        .panel::after { content:''; position:absolute; top:0; right:0; width:1px; height:100%; background:linear-gradient(to bottom,transparent,rgba(255,255,255,.08),transparent); z-index:10; }
+        .panel:last-child::after { display:none; }
+
+        .panel-scan { position:absolute; top:-100%; left:0; right:0; height:100%; background:linear-gradient(to bottom,transparent 45%,rgba(255,255,255,.015) 50%,transparent 55%); opacity:0; pointer-events:none; z-index:30; }
+        .panel:hover .panel-scan { opacity:1; animation:scanline 3s linear infinite; }
+        @keyframes scanline { from{top:-100%} to{top:100%} }
+
+        .panel-count { position:absolute; top:36px; right:28px; font-family:'Bebas Neue',sans-serif; font-size:5rem; color:rgba(255,255,255,.04); line-height:1; z-index:5; transition:color .5s,font-size .5s; user-select:none; }
+        .panel:hover .panel-count { color:rgba(255,215,0,.07); font-size:6rem; }
+
+        .panel-content { position:absolute; bottom:0; left:0; right:0; padding:48px 40px 60px; z-index:20; }
+
+        .panel-eyebrow { font-size:.7rem; letter-spacing:4px; text-transform:uppercase; color:var(--gold); margin-bottom:12px; opacity:0; transform:translateY(10px); transition:opacity .4s .1s,transform .4s .1s; }
+        .panel:hover .panel-eyebrow { opacity:1; transform:translateY(0); }
+
+        .panel-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,5vw,6rem); letter-spacing:6px; line-height:1; margin-bottom:14px; transition:color .4s,transform .5s cubic-bezier(.25,1,.5,1); }
+        .panel:hover .panel-title { color:var(--gold); transform:translateY(-4px); }
+
+        .panel-desc { font-family:'Poppins',sans-serif; font-size:.85rem; font-weight:300; color:rgba(255,255,255,.6); line-height:1.7; max-width:280px; opacity:0; transform:translateY(14px); transition:opacity .4s .15s,transform .4s .15s; margin-bottom:24px; }
+        .panel:hover .panel-desc { opacity:1; transform:translateY(0); }
+
+        .panel-cta { display:inline-flex; align-items:center; gap:10px; background:var(--gold); color:#000; text-decoration:none; font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:3px; padding:12px 28px; width:fit-content; opacity:0; transform:translateY(14px); transition:opacity .4s .2s,transform .4s .2s,background .3s; clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px)); }
+        .panel:hover .panel-cta { opacity:1; transform:translateY(0); }
+        .panel-cta:hover { background:#fff; }
+
+        .ticker { position:fixed; bottom:0; left:0; right:0; height:34px; background:rgba(0,0,0,.7); border-top:1px solid rgba(255,215,0,.1); display:flex; align-items:center; overflow:hidden; z-index:500; opacity:0; animation:fadeDown .6s 2.5s forwards; }
+        .ticker-track { display:flex; gap:60px; white-space:nowrap; animation:ticker 30s linear infinite; font-size:.7rem; letter-spacing:3px; color:rgba(255,255,255,.3); text-transform:uppercase; }
+        .ticker-track span { color:var(--gold); }
+        @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes panelIn { to{opacity:1;transform:scaleY(1)} }
+
+        @media(max-width:768px) {
+            html,body{overflow:auto}
+            .panels{flex-direction:column;height:auto;min-height:100vh}
+            .panel{flex:none!important;height:34vh}
+            .panel-title{font-size:3.5rem}
+            .panel-content{padding:28px 24px 48px}
+            .panel-eyebrow,.panel-desc,.panel-cta{opacity:1;transform:none}
+            .cursor,.cursor-ring{display:none}
+            *{cursor:auto!important}
+            .ticker{display:none}
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <nav>
+        <a href="02_login.html" class="logo-link" title="Back to Home">
+            <div class="logo">CINEPHILE</div>
+        </a>
+        <div class="nav-hint">Choose your universe</div>
+        <div class="nav-spacer"></div>
     </nav>
 
-    <div class="split-container">
-        
-        <a href="#" class="split-section series">
-            <div class="overlay"></div>
-            <h2>SERIES</h2>
-            <p>Binge Worthy</p>
-        </a>
-
-        <a href="#" class="split-section movies">
-            <div class="overlay"></div>
-            <h2>MOVIES</h2>
-            <p>Cinema Classics</p>
-        </a>
-
-        <a href="#" class="split-section fun">
-            <div class="overlay"></div>
-            <h2>ARCADE</h2>
-            <p>Play & Win</p>
-        </a>
-
+    <div class="panels">
+        <div class="panel panel-series">
+            <div class="panel-bg"></div><div class="panel-vignette"></div>
+            <div class="panel-grad"></div><div class="panel-scan"></div>
+            <div class="panel-count">01</div>
+            <div class="panel-content">
+                <p class="panel-eyebrow">Binge · Stream · Obsess</p>
+                <h2 class="panel-title">SERIES</h2>
+                <p class="panel-desc">Dive into worlds that keep you up past midnight. From slow burns to edge-of-your-seat thrillers.</p>
+                <a href="05_series.html" class="panel-cta"><i class='bx bx-play-circle'></i> ENTER</a>
+            </div>
+        </div>
+        <div class="panel panel-movies">
+            <div class="panel-bg"></div><div class="panel-vignette"></div>
+            <div class="panel-grad"></div><div class="panel-scan"></div>
+            <div class="panel-count">02</div>
+            <div class="panel-content">
+                <p class="panel-eyebrow">Cinema · Classics · Icons</p>
+                <h2 class="panel-title">MOVIES</h2>
+                <p class="panel-desc">The silver screen in your hands. Masterpieces, cult favourites, and everything in between.</p>
+                <a href="04_movies.html" class="panel-cta"><i class='bx bx-play-circle'></i> ENTER</a>
+            </div>
+        </div>
+        <div class="panel panel-arcade">
+            <div class="panel-bg"></div><div class="panel-vignette"></div>
+            <div class="panel-grad"></div><div class="panel-scan"></div>
+            <div class="panel-count">03</div>
+            <div class="panel-content">
+                <p class="panel-eyebrow">Play · Score · Win</p>
+                <h2 class="panel-title">ARCADE</h2>
+                <p class="panel-desc">Test your movie knowledge. Mini games, trivia battles, and hidden easter eggs await.</p>
+                <a href="#" class="panel-cta"><i class='bx bx-joystick'></i> ENTER</a>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div class="ticker">
+        <div class="ticker-track">
+            <span>✦</span> Now Streaming <span>✦</span> New Arrivals <span>✦</span> Top Rated <span>✦</span> Hidden Gems <span>✦</span> Staff Picks <span>✦</span> Fan Favourites &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span>✦</span> Now Streaming <span>✦</span> New Arrivals <span>✦</span> Top Rated <span>✦</span> Hidden Gems <span>✦</span> Staff Picks <span>✦</span> Fan Favourites &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </div>
+    </div>
+
+    <script>
+        const cursor = document.getElementById('cursor');
+        const ring   = document.getElementById('cursor-ring');
+        let mx=0,my=0,rx=0,ry=0;
+        document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cursor.style.left=mx+'px'; cursor.style.top=my+'px'; });
+        (function loop(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loop); })();
+        document.querySelectorAll('.panel').forEach(p=>{
+            p.addEventListener('mouseenter',()=>{ cursor.style.width='6px'; cursor.style.height='6px'; ring.style.width='60px'; ring.style.height='60px'; ring.style.borderColor='rgba(255,215,0,.8)'; });
+            p.addEventListener('mouseleave',()=>{ cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; ring.style.borderColor='rgba(255,215,0,.4)'; p.querySelector('.panel-bg').style.transform='scale(1.06)'; });
+            p.addEventListener('mousemove',e=>{ const r=p.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width-.5; const y=(e.clientY-r.top)/r.height-.5; p.querySelector('.panel-bg').style.transform=`translate(${x*-18}px,${y*-18}px) scale(1.06)`; });
+        });
+    </script>
 </body>
 </html>

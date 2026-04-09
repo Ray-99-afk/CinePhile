@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinePhile - Series</title>
+    <link rel="icon" href="mainlogo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root{--gold:#FFD700;--gold-glow:rgba(255,215,0,.15);--bg:#08080f;--surface:#0f0f1a;--surface2:#16161f;--accent:#5b7fff;--text:#fff;--text-dim:#8888aa;--nav-h:70px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg);color:var(--text);font-family:'Roboto Condensed',sans-serif;overflow-x:hidden;min-height:100vh}
+        body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9998;opacity:.4}
+        body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 70% 0%,rgba(91,127,255,.06),transparent 60%);pointer-events:none;z-index:0}
+        nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:transparent;backdrop-filter:none;border-bottom:none;z-index:1000;transition:transform .3s ease}
+        nav.nav-hidden{transform:translateY(-100%)}
+        .nav-left{display:flex;align-items:center;gap:20px}
+
+        .logo-link{text-decoration:none;color:#fff}
+        .logo{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:4px;border:2px solid #fff;padding:3px 12px;transition:border-color .3s,color .3s}
+        .logo-link:hover .logo{border-color:var(--gold);color:var(--gold)}
+        .nav-right{display:flex;align-items:center;gap:16px}
+        .watchlist-btn{display:flex;align-items:center;gap:8px;background:none;border:1px solid rgba(255,215,0,.4);color:var(--gold);padding:8px 18px;cursor:pointer;font-family:'Roboto Condensed',sans-serif;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;transition:all .3s}
+        .watchlist-btn:hover{background:var(--gold-glow);border-color:var(--gold)}
+        .wl-count{background:var(--gold);color:#000;font-size:.7rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center}
+        .wl-count.visible{display:flex}
+        .hero{padding:calc(var(--nav-h) + 20px) 40px 40px;position:relative;text-align:center}
+        .hero-inner{max-width:700px;margin:0 auto}
+        .hero-label{font-size:.75rem;letter-spacing:6px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;opacity:0;animation:fadeUp .6s .1s forwards}
+        .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,9vw,8rem);letter-spacing:6px;line-height:.88;margin-bottom:20px;opacity:0;animation:fadeUp .6s .2s forwards}
+        .hero h1 span{color:var(--gold)}
+        .hero-sub{font-family:'Poppins',sans-serif;font-size:.95rem;color:var(--text-dim);font-weight:300;margin-bottom:40px;opacity:0;animation:fadeUp .6s .3s forwards}
+        .search-wrap{position:relative;flex:1;max-width:320px;margin:0 20px}
+        .search-wrap input{width:100%;background:var(--surface);border:1px solid rgba(91,127,255,.25);border-radius:2px;padding:10px 40px 10px 16px;font-family:'Poppins',sans-serif;font-size:.85rem;color:var(--text);outline:none;transition:border-color .3s,box-shadow .3s}
+        .search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 20px rgba(91,127,255,.1)}
+        .search-wrap input::placeholder{color:var(--text-dim)}
+        .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:1.1rem;pointer-events:none}
+
+        .section{padding:60px 40px}
+        .section-header{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+        .section-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px}
+        .section-line{flex:1;height:1px;background:linear-gradient(to right,rgba(91,127,255,.3),transparent)}
+        .series-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:18px}
+        .series-card{position:relative;aspect-ratio:2/3;overflow:hidden;cursor:pointer;background:var(--surface2);border:1px solid rgba(255,255,255,.05);transition:transform .4s cubic-bezier(.25,1,.5,1),border-color .3s;animation:fadeIn .4s both}
+        .series-card:hover{transform:translateY(-8px) scale(1.02);border-color:rgba(91,127,255,.5);z-index:10}
+        .series-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+        .series-card:hover img{transform:scale(1.08)}
+        .card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,15,.97) 0%,rgba(8,8,15,.3) 50%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:14px;opacity:0;transition:opacity .3s}
+        .series-card:hover .card-overlay{opacity:1}
+        .card-rating{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.85);border:1px solid var(--accent);color:var(--accent);padding:3px 7px;font-size:.72rem;font-weight:700;letter-spacing:1px}
+        .card-seasons{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.75);padding:3px 7px;font-size:.66rem;letter-spacing:1px;text-transform:uppercase}
+        .card-wl-btn{position:absolute;top:42px;left:10px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);color:#fff;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:.95rem;border-radius:1px}
+        .card-wl-btn:hover,.card-wl-btn.in-list{background:var(--gold);border-color:var(--gold);color:#000}
+        .card-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;margin-bottom:4px}
+        .card-meta{display:flex;gap:8px;align-items:center;font-size:.72rem;color:var(--text-dim);margin-bottom:8px}
+        .card-genre{color:var(--accent);font-size:.68rem;letter-spacing:1px;text-transform:uppercase}
+        .slider-container{margin-bottom:40px;}
+        .slider-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;margin-bottom:15px;display:flex;align-items:center;padding:0 40px;}
+        .slider-title span{color:var(--accent);margin-right:10px;}
+        .slider-row{display:flex;gap:18px;overflow-x:auto;padding:0 40px 20px 40px;scroll-behavior:smooth;}
+        .slider-row::-webkit-scrollbar{height:6px}
+        .slider-row::-webkit-scrollbar-track{background:var(--bg);border-radius:3px}
+        .slider-row::-webkit-scrollbar-thumb{background:rgba(91,127,255,.3);border-radius:3px}
+        .slider-row .series-card{min-width:185px;max-width:185px;flex-shrink:0;}
+
+        .play-btn{width:100%;background:var(--accent);color:#000;border:none;padding:7px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .3s}
+        .play-btn:hover{opacity:.85}
+        .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9000;display:none;align-items:center;justify-content:center;padding:15px;backdrop-filter:blur(8px)}
+        .modal-backdrop.open{display:flex}
+        .modal{width:100%;max-width:900px;max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid rgba(91,127,255,.2);position:relative;animation:modalIn .3s ease;overflow:hidden;border-radius:6px;box-shadow:0 15px 40px rgba(0,0,0,0.6);}
+        @keyframes modalIn{from{transform:scale(.95) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+        .modal-close{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:1.6rem;z-index:20;transition:all .3s}
+        .modal-close:hover{background:var(--accent);color:#000;transform:rotate(90deg);}
+        .modal-video{width:100%;height:35vh;min-height:220px;max-height:400px;background:#000;flex-shrink:0;}
+        .modal-video iframe{width:100%;height:100%;border:none;}
+        .modal-info{padding:26px;overflow-y:auto;flex:1;}
+        .modal-info::-webkit-scrollbar{width:6px}
+        .modal-info::-webkit-scrollbar-thumb{background:rgba(91,127,255,.3);border-radius:3px}
+        .modal-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:3px;margin-bottom:10px;line-height:1.1}
+        .modal-meta{display:flex;gap:12px;align-items:center;margin-bottom:14px;font-size:.85rem;color:var(--text-dim);flex-wrap:wrap}
+        .modal-meta .rating{color:var(--accent);font-weight:700;background:rgba(91,127,255,.1);padding:3px 8px;border-radius:3px;border:1px solid rgba(91,127,255,.2);}
+        .seasons-badge{background:rgba(91,127,255,.15);border:1px solid rgba(91,127,255,.3);color:var(--accent);padding:3px 8px;font-size:.8rem;letter-spacing:1px;border-radius:3px;}
+        .modal-desc{font-family:'Poppins',sans-serif;font-size:.9rem;color:#ccc;line-height:1.6;margin-bottom:20px}
+        .modal-actions{display:flex;gap:12px;width:100%;margin-top:10px}
+        .modal-play-btn{display:flex;align-items:center;justify-content:center;flex:1;gap:8px;background:var(--accent);border:none;color:#fff;padding:14px;cursor:pointer;font-family:'Roboto Condensed',sans-serif;font-size:1.05rem;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;transition:all .3s;border-radius:4px}
+        .modal-play-btn:hover{background:#fff;color:#000;box-shadow:0 0 20px rgba(255,255,255,.3);}
+        .modal-wl-btn{display:flex;align-items:center;justify-content:center;flex:1;gap:8px;background:transparent;border:2px solid rgba(91,127,255,.4);color:var(--accent);padding:14px;cursor:pointer;font-family:'Roboto Condensed',sans-serif;font-size:.95rem;letter-spacing:1px;font-weight:700;text-transform:uppercase;transition:all .3s;border-radius:4px}
+        .modal-wl-btn:hover,.modal-wl-btn.in-list{background:var(--accent);color:#000;border-color:var(--accent)}
+        .wl-panel{position:fixed;top:0;right:-420px;width:420px;height:100vh;background:var(--surface);border-left:1px solid rgba(91,127,255,.15);z-index:2000;transition:right .4s cubic-bezier(.25,1,.5,1);display:flex;flex-direction:column}
+        .wl-panel.open{right:0}
+        .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1999;display:none}
+        .panel-overlay.open{display:block}
+        .panel-hdr{padding:26px;border-bottom:1px solid rgba(91,127,255,.1);display:flex;align-items:center;justify-content:space-between}
+        .panel-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px}
+        .panel-close-btn{background:none;border:none;color:var(--text-dim);font-size:1.4rem;cursor:pointer;transition:color .3s}
+        .panel-close-btn:hover{color:var(--gold)}
+        .panel-list{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+        .panel-list::-webkit-scrollbar{width:4px}
+        .panel-list::-webkit-scrollbar-thumb{background:rgba(91,127,255,.2);border-radius:2px}
+        .panel-empty{text-align:center;color:var(--text-dim);font-family:'Poppins',sans-serif;padding:50px 20px}
+        .panel-empty i{font-size:3rem;color:rgba(91,127,255,.2);margin-bottom:12px;display:block}
+        .panel-item{display:flex;gap:12px;align-items:center;background:var(--surface2);padding:10px;border:1px solid rgba(255,255,255,.04);animation:fadeIn .3s}
+        .panel-item img{width:46px;height:65px;object-fit:cover}
+        .panel-item-info{flex:1}
+        .panel-item-title{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:2px;margin-bottom:3px}
+        .panel-item-meta{font-size:.72rem;color:var(--text-dim)}
+        .panel-item-rm{background:none;border:none;color:var(--text-dim);font-size:1.1rem;cursor:pointer;transition:color .3s}
+        .panel-item-rm:hover{color:#e50914}
+
+        .no-results{text-align:center;padding:60px;color:var(--text-dim);display:none}
+        .no-results.visible{display:block}
+        .no-results i{font-size:3rem;margin-bottom:14px;display:block}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        ::-webkit-scrollbar{width:5px}
+        ::-webkit-scrollbar-track{background:var(--bg)}
+        ::-webkit-scrollbar-thumb{background:rgba(91,127,255,.2)}
+        @media(max-width:768px){nav{padding:0 16px}.hero{padding:calc(var(--nav-h)+30px) 16px 36px}.section{padding:36px 16px}.ai-prompt-wrap{flex-direction:column}.ai-submit-btn{width:100%;height:52px}.wl-panel{width:100%;right:-100%}.series-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <a href="03_dashboard.html" class="logo-link"><div class="logo">CINEPHILE</div></a>
+        </div>
+        <div class="search-wrap">
+            <input type="text" id="search-input" placeholder="Search series, creators, genres…" autocomplete="off">
+            <i class='bx bx-search search-icon'></i>
+        </div>
+        <div class="nav-right">
+            <button class="watchlist-btn" onclick="toggleWL()">
+                <i class='bx bx-bookmark'></i> WATCHLIST
+                <span class="wl-count" id="wl-count">0</span>
+            </button>
+        </div>
+    </nav>
+    <div class="hero">
+        <div class="hero-inner">
+            <p class="hero-label">Binge-Worthy</p>
+            <p class="hero-sub">From prestige dramas to cult classics — every show worth losing sleep over.</p>
+        </div>
+    </div>
+
+    <div class="section" style="padding-top:0">
+        <div id="sliders-container"></div>
+        
+        <h2 class="slider-title" id="more-title" style="margin-top:50px; padding-top:30px; border-top:1px solid rgba(255,255,255,0.05); justify-content:center;"><span>✦</span> MORE TO EXPLORE</h2>
+        <div class="series-grid" id="series-grid" style="padding:40px;"></div>
+        
+        <div class="no-results" id="no-results"><i class='bx bx-tv'></i><p>No series found.</p></div>
+    </div>
+    <div class="modal-backdrop" id="modal" onclick="handleModalBg(event)">
+        <div class="modal" id="modal-box">
+            <button class="modal-close" onclick="closeModal()" title="Close"><i class='bx bx-x'></i></button>
+            <div class="modal-video"><iframe id="modal-iframe" allowfullscreen allow="autoplay"></iframe></div>
+            <div class="modal-info">
+                <h2 class="modal-title" id="modal-title"></h2>
+                <div class="modal-meta">
+                    <span class="rating" id="modal-rating"></span>
+                    <span id="modal-year"></span>
+                    <span id="modal-genre"></span>
+                    <span class="seasons-badge" id="modal-seasons"></span>
+                </div>
+                <p class="modal-desc" id="modal-desc"></p>
+                <div class="modal-actions">
+                    <button class="modal-play-btn" onclick="alert('Full episode streaming coming soon!')"><i class='bx bx-play-circle' style="font-size:1.4rem"></i> PLAY SERIES</button>
+                    <button class="modal-wl-btn" id="modal-wl-btn" onclick="wlFromModal()">
+                        <i class='bx bx-bookmark-plus'></i> ADD TO WATCHLIST
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel-overlay" id="panel-overlay" onclick="toggleWL()"></div>
+    <div class="wl-panel" id="wl-panel">
+        <div class="panel-hdr"><h2>MY WATCHLIST</h2><button class="panel-close-btn" onclick="toggleWL()"><i class='bx bx-x'></i></button></div>
+        <div class="panel-list" id="panel-list"></div>
+    </div>
+    <script>
+    const API_KEY = '52df95704200233ac0be06114624f980';
+    const BASE = 'https://api.themoviedb.org/3';
+    const IMG = 'https://image.tmdb.org/t/p/w500';
+
+    let watchlist = JSON.parse(localStorage.getItem('cinephile_series_wl') || '[]');
+    let currentShow = null;
+    let allSeries = [];
+    let searchTimeout = null;
+    let isSearching = false;
+    let page = 1;
+    let totalPages = 1;
+    let loadingMore = false;
+
+    const CATEGORIES = [
+        { id: 'awards', title: '<span>✦</span> EMMY WINNERS & CLASSICS', url: '/discover/tv?sort_by=vote_average.desc&vote_count.gte=3000' },
+        { id: 'anime', title: '<span>✦</span> ANIME', url: '/discover/tv?with_genres=16&with_original_language=ja' },
+        { id: 'animation', title: '<span>✦</span> ANIMATION', url: '/discover/tv?with_genres=16' },
+        { id: 'comedy', title: '<span>✦</span> COMEDY', url: '/discover/tv?with_genres=35' },
+        { id: 'drama', title: '<span>✦</span> EMOTIONAL DRAMA', url: '/discover/tv?with_genres=18' },
+        { id: 'scifi', title: '<span>✦</span> SCI-FI & FANTASY', url: '/discover/tv?with_genres=10765' },
+        { id: '90s', title: '<span>✦</span> 90s THROWBACK', url: '/discover/tv?first_air_date.gte=1990-01-01&first_air_date.lte=1999-12-31' }
+    ];
+
+    const GENRES = {};
+    fetch(`${BASE}/genre/tv/list?api_key=${API_KEY}`).then(r=>r.json()).then(d=>{
+        d.genres.forEach(g=>GENRES[g.id]=g.name);
+        loadCategories();
+    });
+    updateWLCount();
+
+    async function loadCategories() {
+        const container = document.getElementById('sliders-container');
+        container.innerHTML = CATEGORIES.map(cat => `
+            <div class="slider-container" id="slider-${cat.id}">
+                <h2 class="slider-title">${cat.title}</h2>
+                <div class="slider-row" id="row-${cat.id}"></div>
+            </div>
+        `).join('');
+
+        for (const cat of CATEGORIES) {
+            try {
+                const res = await fetch(`${BASE}${cat.url}&api_key=${API_KEY}`);
+                const data = await res.json();
+                const shows = data.results.filter(s=>s.poster_path).map(mapSeries);
+                shows.forEach(s => { if(!allSeries.find(x=>x.id===s.id)) allSeries.push(s); });
+                document.getElementById(`row-${cat.id}`).innerHTML = shows.map((s,i)=>buildCard(s,i)).join('');
+            } catch(e) { console.error(e); }
+        }
+        loadMore();
+    }
+
+    async function loadMore() {
+        if (loadingMore || page > totalPages || isSearching) return;
+        loadingMore = true;
+        try {
+            const res = await fetch(`${BASE}/tv/popular?api_key=${API_KEY}&page=${page}`);
+            const data = await res.json();
+            totalPages = Math.min(data.total_pages, 20);
+            const shows = data.results.filter(s=>s.poster_path).map(mapSeries);
+            shows.forEach(s => { if(!allSeries.find(x=>x.id===s.id)) allSeries.push(s); });
+            document.getElementById('series-grid').innerHTML += shows.map((s,i) => buildCard(s,i)).join('');
+            page++;
+        } catch(e) { console.error('TMDB error:', e); }
+        loadingMore = false;
+    }
+
+    function mapSeries(s) {
+        const genreNames = (s.genre_ids||[]).map(id=>GENRES[id]||'').filter(Boolean);
+        return {
+            id: s.id,
+            title: s.name || s.original_name,
+            year: (s.first_air_date||'').split('-')[0] || '—',
+            genre: genreNames[0] || '—',
+            rating: (s.vote_average||0).toFixed(1),
+            seasons: '',
+            poster: s.poster_path ? IMG + s.poster_path : '',
+            desc: s.overview || 'No description available.'
+        };
+    }
+
+    function buildCard(s, i) {
+        const inList = watchlist.find(w=>w.id===s.id);
+        return `<div class="series-card" style="animation-delay:${(i%20)*0.04}s" onclick="openModal(${s.id})">
+            <img src="${s.poster}" alt="${s.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/185x275/1a1a1a/FFD700?text=${encodeURIComponent(s.title)}'">
+            <div class="card-rating">★ ${s.rating}</div>
+            <button class="card-wl-btn ${inList?'in-list':''}" onclick="event.stopPropagation();quickWL(${s.id})" title="Watchlist">
+                <i class='bx ${inList?'bxs-bookmark':'bx-bookmark-plus'}'></i>
+            </button>
+            <div class="card-overlay">
+                <span class="card-genre">${s.genre}</span>
+                <h3 class="card-title">${s.title}</h3>
+                <div class="card-meta"><span>${s.year}</span></div>
+                <button class="play-btn"><i class='bx bx-show'></i> VIEW DETAILS</button>
+            </div>
+        </div>`;
+    }
+
+    function renderGrid(shows) {
+        const grid = document.getElementById('series-grid');
+        const noRes = document.getElementById('no-results');
+        if (!shows.length) { grid.innerHTML=''; noRes.classList.add('visible'); return; }
+        noRes.classList.remove('visible');
+        grid.innerHTML = shows.map((s,i) => buildCard(s,i)).join('');
+    }
+
+    document.getElementById('search-input').addEventListener('input', e => {
+        clearTimeout(searchTimeout);
+        const q = e.target.value.trim();
+        if (!q) {
+            isSearching = false;
+            document.getElementById('sliders-container').style.display = 'block';
+            document.getElementById('more-title').style.display = 'flex';
+            document.getElementById('series-grid').innerHTML = '';
+            document.getElementById('no-results').classList.remove('visible');
+            page = 1;
+            loadMore();
+            return;
+        }
+        document.getElementById('sliders-container').style.display = 'none';
+        document.getElementById('more-title').style.display = 'none';
+        searchTimeout = setTimeout(async () => {
+            isSearching = true;
+            try {
+                const res = await fetch(`${BASE}/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(q)}&page=1`);
+                const data = await res.json();
+                const shows = data.results.filter(s=>s.poster_path).map(mapSeries);
+                allSeries = shows;
+                renderGrid(shows);
+            } catch(e) { console.error(e); }
+        }, 400);
+    });
+
+    window.addEventListener('scroll', () => {
+        if (isSearching) return;
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) loadMore();
+    });
+
+    async function openModal(id) {
+        let s = allSeries.find(x=>x.id===id);
+        if (!s) {
+            try {
+                const res = await fetch(`${BASE}/tv/${id}?api_key=${API_KEY}`);
+                const d = await res.json();
+                s = { id:d.id, title:d.name, year:(d.first_air_date||'').split('-')[0],
+                    genre:d.genres?.[0]?.name||'—', rating:(d.vote_average||0).toFixed(1),
+                    seasons:d.number_of_seasons?`${d.number_of_seasons} Season${d.number_of_seasons>1?'s':''}`:'',
+                    poster:d.poster_path?IMG+d.poster_path:'', desc:d.overview||'' };
+            } catch(e) { return; }
+        }
+        currentShow = s;
+        if (!s.seasons) {
+            try {
+                const d = await (await fetch(`${BASE}/tv/${id}?api_key=${API_KEY}`)).json();
+                s.seasons = d.number_of_seasons ? `${d.number_of_seasons} Season${d.number_of_seasons>1?'s':''}` : '';
+            } catch(e) {}
+        }
+        document.getElementById('modal-title').textContent = s.title;
+        document.getElementById('modal-rating').textContent = `★ ${s.rating}`;
+        document.getElementById('modal-year').textContent = s.year;
+        document.getElementById('modal-genre').textContent = s.genre;
+        document.getElementById('modal-seasons').textContent = s.seasons;
+        document.getElementById('modal-desc').textContent = s.desc;
+        document.getElementById('modal-iframe').src = '';
+        try {
+            const vData = await (await fetch(`${BASE}/tv/${id}/videos?api_key=${API_KEY}`)).json();
+            const t = vData.results.find(v=>v.type==='Trailer'&&v.site==='YouTube') || vData.results[0];
+            if (t) document.getElementById('modal-iframe').src = `https://www.youtube.com/embed/${t.key}?autoplay=1&playsinline=1&fs=1&rel=0`;
+        } catch(e) {}
+        const inList = watchlist.find(w=>w.id===s.id);
+        const btn = document.getElementById('modal-wl-btn');
+        btn.className = `modal-wl-btn ${inList?'in-list':''}`;
+        btn.innerHTML = `<i class='bx ${inList?'bxs-bookmark':'bx-bookmark-plus'}'></i> ${inList?'IN WATCHLIST':'ADD TO WATCHLIST'}`;
+        document.getElementById('modal').classList.add('open');
+        document.body.style.overflow='hidden';
+    }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); document.getElementById('modal-iframe').src=''; document.body.style.overflow=''; currentShow=null; }
+    function handleModalBg(e) { if(e.target===document.getElementById('modal')) closeModal(); }
+
+    function quickWL(id) { const s=allSeries.find(x=>x.id===id); if(!s) return; toggleWLItem(s); renderGrid(allSeries); }
+    function wlFromModal() { if(!currentShow) return; toggleWLItem(currentShow); openModal(currentShow.id); }
+    function toggleWLItem(s) {
+        const idx=watchlist.findIndex(w=>w.id===s.id);
+        if(idx>=0) watchlist.splice(idx,1); else watchlist.push(s);
+        localStorage.setItem('cinephile_series_wl',JSON.stringify(watchlist));
+        updateWLCount(); renderWLPanel();
+    }
+    function updateWLCount() { 
+        const mWL = JSON.parse(localStorage.getItem('cinephile_movies_wl') || '[]');
+        const sWL = JSON.parse(localStorage.getItem('cinephile_series_wl') || '[]');
+        const total = mWL.length + sWL.length;
+        const el = document.getElementById('wl-count'); 
+        el.textContent = total; 
+        total > 0 ? el.classList.add('visible') : el.classList.remove('visible'); 
+    }
+    function toggleWL() { document.getElementById('wl-panel').classList.toggle('open'); document.getElementById('panel-overlay').classList.toggle('open'); renderWLPanel(); }
+    function renderWLPanel() {
+        const list = document.getElementById('panel-list');
+        const mWL = JSON.parse(localStorage.getItem('cinephile_movies_wl') || '[]');
+        const sWL = JSON.parse(localStorage.getItem('cinephile_series_wl') || '[]');
+        const all = [...mWL.map(m=>({...m, _t:'MOVIE'})), ...sWL.map(s=>({...s, _t:'SERIES'}))];
+        if(!all.length){ list.innerHTML=`<div class="panel-empty"><i class='bx bx-bookmark'></i><p>Your watchlist is empty.</p></div>`; return; }
+        list.innerHTML=all.map(item=>`<div class="panel-item" onclick="handleWlClick(${item.id}, '${item._t}')" style="cursor:pointer;"><img src="${item.poster}" alt="${item.title}"><div class="panel-item-info"><div class="panel-item-title" style="display:flex;align-items:center;gap:6px;">${item.title} <span style="font-size:0.6rem;padding:2px 4px;background:var(--accent);color:#000;border-radius:2px;letter-spacing:1px;line-height:1;">${item._t}</span></div><div class="panel-item-meta">${item.year} · ${item.genre} · ★ ${item.rating}</div></div><button class="panel-item-rm" onclick="event.stopPropagation(); rmFromPanel(${item.id}, '${item._t}')" title="Remove"><i class='bx bx-x'></i></button></div>`).join('');
+    }
+    function handleWlClick(id, type) {
+        if (type === 'SERIES') { openModal(id); toggleWL(); } 
+        else { window.location.href = `04_movies.html?id=${id}`; }
+    }
+    function rmFromPanel(id, type) { 
+        if (type === 'SERIES') {
+            watchlist = watchlist.filter(w=>w.id!==id); 
+            localStorage.setItem('cinephile_series_wl',JSON.stringify(watchlist)); 
+            renderGrid(allSeries); 
+        } else {
+            let mWL = JSON.parse(localStorage.getItem('cinephile_movies_wl') || '[]');
+            mWL = mWL.filter(w=>w.id!==id);
+            localStorage.setItem('cinephile_movies_wl',JSON.stringify(mWL));
+        }
+        updateWLCount(); renderWLPanel(); 
+    }
+
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+    let lastScroll=0;
+    window.addEventListener('scroll',()=>{ const cur=window.scrollY; document.querySelector('nav').classList.toggle('nav-hidden',cur>lastScroll&&cur>80); lastScroll=cur; });
+
+    // Open item from cross-page redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetId = urlParams.get('id');
+    if (targetId) { setTimeout(() => openModal(Number(targetId)), 300); }
+    </script>
+</body>
+</html>

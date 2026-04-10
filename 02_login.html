@@ -86,6 +86,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA81Gb34RwpjVU1w3l5eAxktd3BribOJzo",
@@ -101,6 +102,14 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const registerNameInDB = async (uid, name) => {
+            try {
+                const lowerName = name.trim().toLowerCase();
+                if(lowerName) await set(ref(db, `users_by_name/${lowerName}`), { uid: uid, name: name });
+            } catch(e) { console.error("Error writing name to DB", e); }
+        };
 
         // Social Login Logic
         const googleProvider = new GoogleAuthProvider();
@@ -121,6 +130,7 @@
                     await updateProfile(result.user, { displayName: chosenName });
                 }
                 
+                await registerNameInDB(result.user.uid, chosenName);
                 localStorage.setItem('cinephile_user_name', chosenName);
                 window.location.href = "03_dashboard.html";
             } catch (error) {
@@ -146,6 +156,8 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                 await updateProfile(userCredential.user, { displayName: name });
+
+                await registerNameInDB(userCredential.user.uid, name);
                 
                 // Store username locally so Arcade can grab it!
                 localStorage.setItem('cinephile_user_name', name);
@@ -174,7 +186,9 @@
 
             try {
                 const creds = await signInWithEmailAndPassword(auth, email, pass);
-                localStorage.setItem('cinephile_user_name', creds.user.displayName || 'PLAYER');
+                const currentName = creds.user.displayName || 'PLAYER';
+                await registerNameInDB(creds.user.uid, currentName);
+                localStorage.setItem('cinephile_user_name', currentName);
                 window.location.href = "03_dashboard.html";
             } catch (error) {
                 console.error("Login error", error);

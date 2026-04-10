@@ -179,6 +179,42 @@
         .profile-footer { padding:20px 30px; border-top:1px solid rgba(255,255,255,.05); margin-top:auto;}
         
         .hidden { display:none !important; }
+
+        /* Friends UI */
+        .friend-btn { display:flex; align-items:center; gap:8px; cursor:pointer; background:rgba(255,255,255,.05); padding:6px 12px; border-radius:30px; border:1px solid rgba(168,85,247,.3); transition:all .3s ease; color:var(--text); font-family:'Roboto Condensed'; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+        .friend-btn:hover { background:rgba(168,85,247,.15); border-color:#a855f7; color:#fff; }
+        
+        .friend-panel { position:fixed; top:0; left:-400px; width:400px; height:100dvh; background:var(--surface); z-index:2000; transition:left .4s cubic-bezier(.25,1,.5,1); display:flex; flex-direction:column; box-shadow:10px 0 30px rgba(0,0,0,.5); }
+        .friend-panel.open { left:0; }
+        
+        .friend-hdr { padding:30px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,.05); }
+        .friend-hdr h2 { font-family:'Bebas Neue'; font-size:2rem; letter-spacing:4px; margin:0; }
+        .friend-hdr button { background:none; border:none; color:var(--text-dim); font-size:1.8rem; cursor:pointer; transition:color .3s; }
+        .friend-hdr button:hover { color:#e50914; }
+
+        .friend-list { padding:20px 30px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
+        
+        .friend-item { display:flex; align-items:center; gap:15px; padding:10px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:4px; transition:all .3s; }
+        .friend-item:hover { border-color:rgba(168,85,247,.4); transform:translateY(-2px); }
+        .friend-avatar { width:45px; height:45px; border-radius:50%; background:#a855f7; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Bebas Neue'; font-size:1.5rem; overflow:hidden;}
+        .friend-avatar img { width:100%; height:100%; object-fit:cover; }
+        .friend-info { display:flex; flex-direction:column; flex:1; overflow:hidden;}
+        .friend-name { font-family:'Poppins'; font-size:.95rem; font-weight:600; color:#fff; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;}
+
+        .friend-actions { padding:20px 30px; border-top:1px solid rgba(255,255,255,.05); }
+        .friend-add-btn { width:100%; display:flex; justify-content:center; align-items:center; gap:8px; padding:12px; background:var(--surface2); border:1px solid #a855f7; color:#a855f7; font-family:'Roboto Condensed'; font-size:.9rem; letter-spacing:1px; cursor:pointer; border-radius:4px; transition:all .3s; }
+        .friend-add-btn:hover { background:rgba(168,85,247,.1); color:#fff; }
+
+        .friend-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:3000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(5px); }
+        .friend-modal-bg.open { display:flex; }
+        .friend-modal { background:var(--surface); width:90%; max-width:400px; padding:30px; border-radius:8px; border:1px solid rgba(168,85,247,.3); box-shadow:0 10px 40px rgba(0,0,0,.5); text-align:center; position:relative;}
+        .friend-modal h3 { font-family:'Bebas Neue'; font-size:2.2rem; letter-spacing:2px; margin-bottom:15px; color:#fff; }
+        .friend-modal p { font-family:'Poppins'; font-size:.8rem; color:var(--text-dim); margin-bottom:20px; }
+        .friend-input { width:100%; background:var(--surface2); border:1px solid rgba(255,255,255,.1); padding:12px 15px; border-radius:4px; color:#fff; font-family:'Poppins'; font-size:1rem; outline:none; transition:all .3s; margin-bottom:20px; }
+        .friend-input:focus { border-color:#a855f7; }
+        .friend-submit { width:100%; padding:12px; background:#a855f7; border:none; color:#fff; font-family:'Roboto Condensed'; font-size:1rem; letter-spacing:1px; border-radius:4px; cursor:pointer; transition:transform .3s; font-weight:700;}
+        .friend-submit:hover { transform:translateY(-2px); box-shadow:0 5px 15px rgba(168,85,247,.4); }
+
 </style>
 </head>
 <body>
@@ -200,10 +236,10 @@
             </button>
         </div>
         <div class="friends-row">
-            <button class="friends-btn" onclick="alert('Friends list coming soon!')">
+            <button class="friends-btn" onclick="toggleFriendsPanel()">
                 <i class='bx bx-group'></i> Friends
             </button>
-            <button class="friends-btn" onclick="alert('Add Friends coming soon!')">
+            <button class="friends-btn" onclick="openAddFriendModal()">
                 <i class='bx bx-user-plus'></i> Add Friends
             </button>
         </div>
@@ -382,9 +418,6 @@
         return `<div class="movie-card" style="animation-delay:${(i%20)*0.04}s" onclick="openModal(${m.id})">
             <img src="${m.poster}" alt="${m.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/185x275/1a1a1a/FFD700?text=${encodeURIComponent(m.title)}'">
             <div class="card-rating">★ ${m.rating}</div>
-            <button class="card-wl-btn ${inList?'in-list':''}" onclick="event.stopPropagation();quickWL(${m.id})" title="Watchlist">
-                <i class='bx ${inList?'bxs-bookmark':'bx-bookmark-plus'}'></i>
-            </button>
             <div class="card-overlay">
                 <span class="card-genre">${m.genre}</span>
                 <h3 class="card-title">${m.title}</h3>
@@ -596,17 +629,23 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, updateProfile } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
         const firebaseConfig = {
             apiKey: "AIzaSyA81Gb34RwpjVU1w3l5eAxktd3BribOJzo",
             authDomain: "cinephile-binge.firebaseapp.com",
+            databaseURL: "https://cinephile-binge-default-rtdb.firebaseio.com",
             projectId: "cinephile-binge"
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getDatabase(app);
+        
         window.fbUpdateProfile = async (newName, newPhotoUrl) => {
             if(!auth || !auth.currentUser) return false;
             try {
                 await updateProfile(auth.currentUser, { displayName: newName, photoURL: newPhotoUrl || "" });
+                const lowerName = newName.trim().toLowerCase();
+                if(lowerName) await set(ref(db, `users_by_name/${lowerName}`), { uid: auth.currentUser.uid, name: newName, avatar: newPhotoUrl || ''});
                 return true;
             } catch (e) { return false; }
         };

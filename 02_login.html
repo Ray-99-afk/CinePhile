@@ -19,47 +19,47 @@
             </a>
 
             <div class="auth-form-container sign-up">
-                <form class="auth-form">
+                <form class="auth-form" id="signup-form">
                     <h1>Create Script</h1>
                     <div class="auth-social-icons">
-                        <a href="#" class="auth-icon"><i class='bx bxl-google'></i></a>
-                        <a href="#" class="auth-icon"><i class='bx bxl-github'></i></a>
+                        <a href="#" class="auth-icon btn-google"><i class='bx bxl-google'></i></a>
                     </div>
                     <span>or use your email for registration</span>
                     <div class="auth-input-box">
-                        <input type="text" placeholder="Character Name">
+                        <input type="text" id="signup-name" placeholder="Character Name" required>
                         <i class='bx bxs-user'></i>
                     </div>
                     <div class="auth-input-box">
-                        <input type="email" placeholder="Email">
+                        <input type="email" id="signup-email" placeholder="Email" required>
                         <i class='bx bxs-envelope'></i>
                     </div>
                     <div class="auth-input-box">
-                        <input type="password" placeholder="Password">
+                        <input type="password" id="signup-password" placeholder="Password" required>
                         <i class='bx bxs-lock-alt'></i>
                     </div>
-                    <button class="auth-btn">Sign Up</button>
+                    <button type="submit" class="auth-btn">Sign Up</button>
+                    <p id="signup-error" style="color:var(--danger); font-size:0.8rem; margin-top:10px; font-family:'Poppins', sans-serif; text-align:center; min-height:20px;"></p>
                 </form>
             </div>
 
             <div class="auth-form-container sign-in">
-                <form class="auth-form">
+                <form class="auth-form" id="login-form">
                     <h1>Resume Action</h1>
                     <div class="auth-social-icons">
-                        <a href="#" class="auth-icon"><i class='bx bxl-google'></i></a>
-                        <a href="#" class="auth-icon"><i class='bx bxl-github'></i></a>
+                        <a href="#" class="auth-icon btn-google"><i class='bx bxl-google'></i></a>
                     </div>
                     <span>or use your email password</span>
                     <div class="auth-input-box">
-                        <input type="email" placeholder="Email">
+                        <input type="email" id="login-email" placeholder="Email" required>
                         <i class='bx bxs-envelope'></i>
                     </div>
                     <div class="auth-input-box">
-                        <input type="password" placeholder="Password">
+                        <input type="password" id="login-password" placeholder="Password" required>
                         <i class='bx bxs-lock-alt'></i>
                     </div>
                     <a href="#" class="forget-pass">Forget Your Password?</a>
-                    <button class="auth-btn">Login</button>
+                    <button type="submit" class="auth-btn">Login</button>
+                    <p id="login-error" style="color:var(--danger); font-size:0.8rem; margin-top:10px; font-family:'Poppins', sans-serif; text-align:center; min-height:20px;"></p>
                 </form>
             </div>
 
@@ -68,12 +68,12 @@
                     <div class="auth-toggle-panel auth-toggle-left">
                         <h1>Welcome Back!</h1>
                         <p>Enter your personal details to resume your journey.</p>
-                        <button class="auth-btn transparent" id="login">Login</button>
+                        <button type="button" class="auth-btn transparent" id="login">Login</button>
                     </div>
                     <div class="auth-toggle-panel auth-toggle-right">
                         <h1>Hello, Friend!</h1>
                         <p>Register with your personal details to start your scene.</p>
-                        <button class="auth-btn transparent" id="register">Sign Up</button>
+                        <button type="button" class="auth-btn transparent" id="register">Sign Up</button>
                     </div>
                 </div>
             </div>
@@ -81,5 +81,111 @@
     </section>
 
     <script src="script.js"></script>
+
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA81Gb34RwpjVU1w3l5eAxktd3BribOJzo",
+            authDomain: "cinephile-binge.firebaseapp.com",
+            databaseURL: "https://cinephile-binge-default-rtdb.firebaseio.com",
+            projectId: "cinephile-binge",
+            storageBucket: "cinephile-binge.firebasestorage.app",
+            messagingSenderId: "27110974960",
+            appId: "1:27110974960:web:b7b8c286054f0d3c046935",
+            measurementId: "G-F57QFGJBQ0"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Social Login Logic
+        const googleProvider = new GoogleAuthProvider();
+
+        const handleSocialLogin = async (provider) => {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                let googleName = result.user.displayName || 'PLAYER';
+                
+                // Give the user a chance to change their name for the Arcade!
+                let chosenName = prompt("Choose your Character Name for CinePhile:", googleName);
+                if (!chosenName || chosenName.trim() === "") {
+                    chosenName = googleName; // Fallback if they hit cancel or type nothing
+                }
+
+                // If they changed it, update their actual Firebase Profile
+                if (chosenName !== googleName) {
+                    await updateProfile(result.user, { displayName: chosenName });
+                }
+                
+                localStorage.setItem('cinephile_user_name', chosenName);
+                window.location.href = "03_dashboard.html";
+            } catch (error) {
+                console.error("Social login error", error);
+                alert("Social Login failed: " + error.message.replace('Firebase: ', ''));
+            }
+        };
+
+        document.querySelectorAll('.btn-google').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.preventDefault(); handleSocialLogin(googleProvider); });
+        });
+
+        // Sign Up Logic
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-password').value;
+            const errEl = document.getElementById('signup-error');
+            errEl.textContent = "Creating account...";
+            errEl.style.color = "var(--gold)";
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                await updateProfile(userCredential.user, { displayName: name });
+                
+                // Store username locally so Arcade can grab it!
+                localStorage.setItem('cinephile_user_name', name);
+                window.location.href = "03_dashboard.html";
+            } catch (error) {
+                console.error("Signup error", error);
+                errEl.style.color = "var(--danger)";
+                if (error.code === 'auth/email-already-in-use') {
+                    errEl.textContent = "You already have an account! Please log in.";
+                } else if (error.code === 'auth/weak-password') {
+                    errEl.textContent = "Password must be at least 6 characters.";
+                } else {
+                    errEl.textContent = error.message.replace('Firebase: ', '');
+                }
+            }
+        });
+
+        // Sign In Logic
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const errEl = document.getElementById('login-error');
+            errEl.textContent = "Logging in...";
+            errEl.style.color = "var(--gold)";
+
+            try {
+                const creds = await signInWithEmailAndPassword(auth, email, pass);
+                localStorage.setItem('cinephile_user_name', creds.user.displayName || 'PLAYER');
+                window.location.href = "03_dashboard.html";
+            } catch (error) {
+                console.error("Login error", error);
+                errEl.style.color = "var(--danger)";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    errEl.textContent = "You don't have an account! Please create one.";
+                } else {
+                    errEl.textContent = "Invalid email or password.";
+                }
+            }
+        });
+    </script>
 </body>
 </html>

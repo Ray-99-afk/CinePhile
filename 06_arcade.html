@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinePhile - Arcade</title>
+    <link rel="icon" href="mainlogo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Poppins:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        :root {
+            --bg: #0a0a10; --surface: #12121a; --surface2: #1c1c28;
+            --neon-purple: #a855f7; --neon-cyan: #06b6d4; --gold: #FFD700;
+            --text: #fff; --text-dim: #8888aa; --danger: #ef4444; --success: #22c55e;
+            --nav-h: 70px;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'Roboto Condensed',sans-serif; overflow-x:hidden; min-height:100vh; }
+        
+        /* CRT / Scanline background */
+        body::before { content:''; position:fixed; inset:0; background:linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size:100% 4px, 6px 100%; pointer-events:none; z-index:9000; opacity:0.15; }
+        body::after { content:''; position:fixed; inset:0; background:radial-gradient(circle at 50% 50%, rgba(168,85,247,0.08) 0%, transparent 60%); pointer-events:none; z-index:0; }
+
+        nav { position:fixed; top:0; left:0; right:0; height:var(--nav-h); display:flex; align-items:center; justify-content:space-between; padding:0 40px; background:transparent; z-index:1000; }
+        .nav-center { position:absolute; left:50%; transform:translateX(-50%); font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:6px; color:var(--text); text-shadow:0 0 10px rgba(168,85,247,.6), 0 0 20px rgba(6,182,212,.4); pointer-events:none; }
+        .logo-link { text-decoration:none; color:#fff; z-index:2; }
+        .logo { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:4px; border:2px solid #fff; padding:3px 12px; transition:all .3s; }
+        .logo-link:hover .logo { border-color:var(--neon-cyan); color:var(--neon-cyan); box-shadow:0 0 10px rgba(6,182,212,.5); }
+
+        .container { max-width:1000px; margin:0 auto; padding:calc(var(--nav-h) + 10px) 20px 20px; position:relative; z-index:10; }
+        
+        .view { display:none; animation:fadeIn .4s ease; }
+        .view.active { display:block; }
+        
+        @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+        
+        /* Typography */
+        h1, h2, h3 { font-family:'Bebas Neue',sans-serif; letter-spacing:4px; }
+        .title-neon { font-size:clamp(3.5rem,8vw,5.5rem); text-align:center; color:#fff; text-shadow:0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple), 0 0 40px var(--neon-cyan); margin-bottom:10px; line-height:1; }
+        .subtitle { text-align:center; color:var(--text-dim); font-family:'Poppins'; font-size:1rem; margin-bottom:40px; font-weight:300; }
+
+        /* Buttons & Inputs */
+        .arcade-btn { background:transparent; border:2px solid var(--neon-cyan); color:var(--neon-cyan); padding:12px 30px; font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:3px; cursor:pointer; transition:all .3s; text-transform:uppercase; position:relative; overflow:hidden; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; gap:10px; }
+        .arcade-btn:hover { background:var(--neon-cyan); color:#000; box-shadow:0 0 20px rgba(6,182,212,.6); }
+        .arcade-btn.purple { border-color:var(--neon-purple); color:var(--neon-purple); }
+        .arcade-btn.purple:hover { background:var(--neon-purple); color:#fff; box-shadow:0 0 20px rgba(168,85,247,.6); }
+        
+        .arcade-input { background:var(--surface2); border:1px solid rgba(168,85,247,.3); color:#fff; padding:12px 20px; font-family:'Poppins',sans-serif; font-size:1rem; border-radius:4px; outline:none; text-align:center; width:100%; max-width:300px; transition:all .3s; }
+        .arcade-input:focus { border-color:var(--neon-cyan); box-shadow:0 0 15px rgba(6,182,212,.3); }
+
+        /* Setup View */
+        .setup-card { background:rgba(28,28,40,.6); border:1px solid rgba(168,85,247,.2); border-radius:8px; padding:40px; text-align:center; max-width:500px; margin:0 auto; backdrop-filter:blur(10px); }
+        .btn-group { display:flex; gap:20px; justify-content:center; margin-top:30px; flex-wrap:wrap; }
+
+        /* Game Selector View */
+        .game-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:20px; }
+        .game-card { background:var(--surface2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:30px; text-align:center; cursor:pointer; transition:all .4s; position:relative; overflow:hidden; }
+        .game-card:hover { transform:translateY(-10px); border-color:var(--neon-cyan); box-shadow:0 15px 30px rgba(0,0,0,.5), 0 0 20px rgba(6,182,212,.2); z-index:2; }
+        .game-icon { font-size:4rem; color:var(--gold); margin-bottom:15px; }
+        .game-title { font-size:2rem; margin-bottom:10px; color:var(--neon-cyan); }
+        .game-desc { font-family:'Poppins'; font-size:.85rem; color:var(--text-dim); }
+
+        /* Lobby View */
+        .lobby-content { display:flex; gap:30px; flex-wrap:wrap; }
+        .room-info { flex:1; min-width:300px; background:var(--surface2); padding:30px; border-radius:8px; border:1px solid rgba(168,85,247,.3); text-align:center; }
+        .room-code { font-size:4rem; font-family:'Bebas Neue'; color:var(--neon-cyan); letter-spacing:8px; margin:20px 0; background:rgba(6,182,212,.1); padding:10px; border-radius:8px; }
+        .player-list { flex:1; min-width:300px; display:flex; flex-direction:column; gap:10px; }
+        .player-item { display:flex; align-items:center; gap:15px; background:rgba(255,255,255,.05); padding:15px 20px; border-radius:8px; border-left:3px solid var(--neon-purple); }
+        .player-item.is-me { border-left-color:var(--neon-cyan); background:rgba(6,182,212,.08); }
+        .player-avatar { width:40px; height:40px; border-radius:50%; background:var(--gold); color:#000; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:1.2rem; }
+        .player-name { font-family:'Poppins'; font-size:1.1rem; font-weight:500; }
+        
+        /* Game View Common */
+        .game-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,.1); padding-bottom:10px; }
+        .round-info { font-size:1.8rem; color:var(--neon-purple); }
+        .score-info { font-size:2rem; color:var(--gold); display:flex; flex-direction:column; align-items:flex-end; }
+        .score-lbl { font-family:'Poppins'; font-size:.7rem; color:var(--text-dim); letter-spacing:2px; line-height:1; }
+        .score-pop { animation:scorePop .4s ease; color:var(--success); }
+        @keyframes scorePop { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
+        
+        .timer-bar-wrap { width:100%; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; margin-bottom:15px; }
+        .timer-bar { height:100%; width:100%; background:var(--success); transition:width 1s linear, background-color 1s; box-shadow:0 0 10px var(--success); }
+        .timer-bar.warning { background:var(--gold); box-shadow:0 0 10px var(--gold); }
+        .timer-bar.danger { background:var(--danger); box-shadow:0 0 10px var(--danger); }
+
+        .scoreboard-side { position:absolute; right:0; top:calc(var(--nav-h) + 120px); width:200px; background:var(--surface2); border:1px solid rgba(255,255,255,.1); border-right:none; border-radius:8px 0 0 8px; padding:15px; display:none; }
+        .scoreboard-side.visible { display:block; }
+        .sb-title { font-size:1.2rem; color:var(--text-dim); border-bottom:1px solid rgba(255,255,255,.05); padding-bottom:8px; margin-bottom:10px; }
+        .sb-player { display:flex; justify-content:space-between; font-family:'Poppins'; font-size:.9rem; margin-bottom:8px; }
+        .sb-player .score { color:var(--neon-cyan); font-weight:700; font-family:'Bebas Neue'; font-size:1.1rem; }
+
+        /* Game 1: Frame */
+        .frame-container { display:flex; gap:20px; align-items:stretch; }
+        .frame-img-box { flex:1.8; height:50vh; max-height:480px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:4px; border:1px solid rgba(255,255,255,.1); margin-bottom:0; background:#000; position:relative; }
+        .frame-img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+        .frame-options { flex:1; display:flex; flex-direction:column; justify-content:center; gap:15px; }
+        .frame-opt-btn { background:var(--surface2); border:1px solid rgba(255,255,255,.1); color:#fff; padding:18px; font-family:'Poppins'; font-size:1rem; border-radius:4px; cursor:pointer; transition:all .2s; }
+        .frame-opt-btn:hover:not(:disabled) { background:rgba(168,85,247,.2); border-color:var(--neon-purple); }
+        .frame-opt-btn.correct { background:rgba(34,197,94,.2); border-color:var(--success); color:var(--success); }
+        .frame-opt-btn.wrong { background:rgba(239,68,68,.2); border-color:var(--danger); color:var(--danger); }
+        .frame-opt-btn:disabled { cursor:not-allowed; opacity:0.8; }
+
+        /* Game 2: Dialogue */
+        .dialogue-container { text-align:center; display:flex; flex-direction:column; align-items:center; }
+        .dialogue-box { background:var(--surface2); border:1px solid rgba(6,182,212,.3); border-radius:8px; padding:30px 40px; margin-bottom:20px; text-align:center; position:relative; width:100%; }
+        .quotes-icon { font-size:2.5rem; color:rgba(6,182,212,.2); position:absolute; top:10px; left:20px; }
+        #dialogue-text { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem, 4vw, 3rem); letter-spacing:2px; color:#fff; line-height:1.2; position:relative; z-index:2; padding:20px 0; }
+        .dialogue-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; }
+
+        /* Game 3: Battle */
+        .battle-container { display:flex; gap:20px; justify-content:center; align-items:stretch; }
+        .battle-card { flex:1; max-width:280px; background:var(--surface2); border:2px solid rgba(255,255,255,.1); border-radius:8px; overflow:hidden; cursor:pointer; transition:all .3s; position:relative; }
+        .battle-card:hover:not(:disabled) { transform:translateY(-8px); border-color:var(--gold); box-shadow:0 10px 20px rgba(255,215,0,.2); }
+        .battle-card img { width:100%; height:45vh; max-height:400px; aspect-ratio:2/3; object-fit:cover; display:block; }
+        .battle-title { padding:10px; font-family:'Bebas Neue'; font-size:1.2rem; text-align:center; min-height:50px; display:flex; align-items:center; justify-content:center; line-height:1.1; }
+        .battle-rating { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); font-family:'Bebas Neue'; font-size:4rem; color:var(--text); background:rgba(0,0,0,.8); width:100px; height:100px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--gold); transition:transform .4s cubic-bezier(.175,.885,.32,1.275); z-index:10; }
+        .battle-card.revealed .battle-rating { transform:translate(-50%,-50%) scale(1); }
+        .battle-card.correct { border-color:var(--success); box-shadow:0 0 20px rgba(34,197,94,.4); }
+        .battle-card.wrong { border-color:var(--danger); opacity:0.6; }
+        .battle-card[disabled] { pointer-events:none; }
+        .vs-badge { display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:2rem; color:var(--danger); align-self:center; text-shadow:0 0 10px rgba(239,68,68,.6); }
+
+        /* Results View */
+        .results-container { text-align:center; }
+        .podium-wrap { display:flex; justify-content:center; align-items:flex-end; gap:20px; min-height:250px; margin:40px 0; }
+        .podium { display:flex; flex-direction:column; align-items:center; width:120px; }
+        .podium-avatar { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:1.8rem; margin-bottom:10px; background:var(--surface2); border:2px solid rgba(255,255,255,.2); }
+        .podium-name { font-family:'Poppins'; font-size:1rem; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+        .podium-score { font-family:'Bebas Neue'; font-size:1.4rem; color:var(--gold); margin-bottom:10px; }
+        .podium-bar { width:100%; background:var(--surface2); border-radius:4px 4px 0 0; display:flex; justify-content:center; padding-top:10px; font-family:'Bebas Neue'; font-size:2rem; color:rgba(255,255,255,.3); }
+        .podium.rank-1 .podium-bar { height:150px; background:linear-gradient(to top, rgba(255,215,0,.1), rgba(255,215,0,.4)); border-top:2px solid var(--gold); color:var(--gold); }
+        .podium.rank-1 .podium-avatar { border-color:var(--gold); box-shadow:0 0 15px rgba(255,215,0,.4); }
+        .podium.rank-2 .podium-bar { height:100px; background:linear-gradient(to top, rgba(168,85,247,.1), rgba(168,85,247,.4)); border-top:2px solid var(--neon-purple); color:var(--neon-purple); }
+        .podium.rank-3 .podium-bar { height:60px; background:linear-gradient(to top, rgba(6,182,212,.1), rgba(6,182,212,.4)); border-top:2px solid var(--neon-cyan); color:var(--neon-cyan); }
+        
+        .solo-result { font-size:4rem; color:var(--gold); text-shadow:0 0 20px rgba(255,215,0,.4); margin:30px 0; line-height:1; }
+
+        /* Profile Panel */
+        .profile-btn { display:flex; align-items:center; gap:10px; cursor:pointer; background:rgba(255,255,255,.05); padding:6px 14px 6px 6px; border-radius:30px; border:1px solid rgba(168,85,247,.3); transition:all .3s ease; }
+        .profile-btn:hover { background:rgba(168,85,247,.15); border-color:var(--neon-cyan); }
+        .profile-avatar-sm { width:32px; height:32px; border-radius:50%; background:var(--neon-purple); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; }
+        .profile-name-sm { font-family:'Poppins',sans-serif; font-size:.85rem; color:var(--text); letter-spacing:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; }
+
+        .profile-panel { position:fixed; top:0; right:-400px; width:400px; height:100dvh; background:var(--surface); border-left:1px solid rgba(168,85,247,.2); z-index:2000; transition:right .4s cubic-bezier(.25,1,.5,1); display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,.5); overflow-y:auto; overflow-x:hidden; }
+        .profile-panel.open { right:0; }
+        .profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1999; display:none; backdrop-filter:blur(3px); }
+        .profile-overlay.open { display:block; }
+        
+        .profile-hdr { padding:30px; display:flex; align-items:center; justify-content:flex-end; }
+        .profile-close-btn { background:none; border:none; color:var(--text-dim); font-size:1.8rem; cursor:pointer; transition:color .3s; }
+        .profile-close-btn:hover { color:var(--danger); }
+        
+        .profile-body { padding:40px 30px; flex:1; display:flex; flex-direction:column; align-items:center; }
+        .profile-avatar-lg { width:100px; height:100px; border-radius:50%; background:var(--gold); color:#000; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:3.5rem; margin-bottom:20px; border:2px solid #fff; box-shadow:0 0 20px rgba(255,215,0,.3); }
+        
+        .profile-input-group { width:100%; margin-bottom:20px; }
+        .profile-input-group label { display:block; font-family:'Poppins',sans-serif; font-size:.75rem; color:var(--text-dim); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+        
+        .profile-footer { padding:20px 30px; border-top:1px solid rgba(168,85,247,.1); }
+
+        /* Utility */
+        .hidden { display:none !important; }
+        .spinner { border:3px solid rgba(255,255,255,.1); border-top-color:var(--neon-cyan); border-radius:50%; width:24px; height:24px; animation:spin 1s linear infinite; display:inline-block; }
+        @keyframes spin { to {transform:rotate(360deg)} }
+        .msg-toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(50px); background:var(--surface2); border:1px solid var(--neon-cyan); color:#fff; padding:12px 24px; border-radius:4px; font-family:'Poppins'; font-size:.9rem; z-index:9999; opacity:0; transition:all .3s; }
+        .msg-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+        @media(max-width:768px) {
+            .frame-container { flex-direction:column; }
+            .frame-img-box { height:35vh; margin-bottom:15px; flex:none; }
+            .frame-options { display:grid; grid-template-columns:1fr 1fr; }
+            .dialogue-options { grid-template-columns:1fr; }
+            .battle-container { flex-direction:column; align-items:center; gap:15px; }
+            .vs-badge { font-size:1.5rem; transform:rotate(90deg); }
+            .battle-card { width:100%; max-width:260px; }
+            .battle-card img { aspect-ratio:16/9; }
+            .scoreboard-side { position:relative; top:0; width:100%; border-radius:4px; border:1px solid rgba(255,255,255,.1); margin-bottom:20px; }
+            .podium-wrap { align-items:center; flex-direction:column; }
+            .podium { width:100%; flex-direction:row; justify-content:space-between; margin-bottom:10px; background:var(--surface2); padding:10px 20px; border-radius:4px; }
+            .podium-bar { display:none; }
+            .podium-avatar { width:40px; height:40px; font-size:1.2rem; margin:0; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="width:140px;">
+            <a href="03_dashboard.html" class="logo-link" style="display:inline-block;"><div class="logo">CINEPHILE</div></a>
+        </div>
+        <div class="nav-center">ARCADE</div>
+        <div style="width:140px; display:flex; justify-content:flex-end;">
+            <div class="profile-btn" onclick="toggleProfile()">
+                <div class="profile-avatar-sm" id="nav-initial">?</div>
+                <span class="profile-name-sm" id="nav-username">Welcome</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- =================== VIEW 1: GAME SELECTOR =================== -->
+        <div id="view-game-select" class="view active">
+            <p class="subtitle" style="font-size:1.2rem; margin-top:10px; margin-bottom:10px;">Test your cinema knowledge</p>
+            
+            <div class="game-grid">
+                <div class="game-card" onclick="selectGame('frame')">
+                    <i class='bx bx-crop game-icon' style="color:var(--neon-purple)"></i>
+                    <h3 class="game-title">GUESS THE FRAME</h3>
+                    <p class="game-desc">Identify the movie from a single cropped frame. Quick choices, multiple options.</p>
+                </div>
+                <div class="game-card" onclick="selectGame('dialogue')">
+                    <i class='bx bxs-quote-alt-left game-icon' style="color:var(--neon-cyan)"></i>
+                    <h3 class="game-title">GUESS THE DIALOGUE</h3>
+                    <p class="game-desc">Read the famous movie quote and identify which movie it belongs to in a race against the clock.</p>
+                </div>
+                <div class="game-card" onclick="selectGame('battle')">
+                    <i class='bx bxs-zap game-icon' style="color:var(--gold)"></i>
+                    <h3 class="game-title">RATE BATTLE</h3>
+                    <p class="game-desc">Two movies. One higher TMDB rating. Pick the winner in a rapid-fire duel.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 2: SETUP =================== -->
+        <div id="view-setup" class="view">
+            <h2 class="title-neon" id="setup-game-title" style="font-size:4rem; margin-bottom:10px;">GAME NAME</h2>
+            <p class="subtitle" style="margin-bottom:20px;">Play solo or invite friends.</p>
+            
+            <div class="setup-card">
+                <div class="btn-group">
+                    <button class="arcade-btn" onclick="startSolo()"><i class='bx bx-user'></i> Play Solo</button>
+                    <button class="arcade-btn purple" onclick="showMultiplayerSetup()"><i class='bx bx-group'></i> Multiplayer</button>
+                </div>
+            </div>
+            
+            <div id="multiplayer-setup" class="setup-card hidden" style="margin-top:20px;">
+                <button class="arcade-btn purple" onclick="createRoom()" style="width:100%; margin-bottom:20px;"><i class='bx bx-plus-circle'></i> Create Room</button>
+                <div style="color:var(--text-dim); margin-bottom:20px; font-family:'Poppins';">OR</div>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <input type="text" id="room-code-input" class="arcade-input" placeholder="ROOM CODE" maxlength="6" style="text-transform:uppercase; max-width:150px; text-align:center;">
+                    <button class="arcade-btn" onclick="joinRoom()"><i class='bx bx-log-in-circle'></i> Join</button>
+                </div>
+                <div id="firebase-instructions" style="margin-top:30px; padding:15px; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); border-radius:4px; font-family:'Poppins'; font-size:0.85rem; color:#fff; text-align:left;">
+                    <strong style="color:var(--danger)"><i class='bx bxs-error-circle'></i> SETUP REQUIRED:</strong> Multiplayer requires a Firebase Realtime Database. 
+                    <br>1. Go to console.firebase.google.com
+                    <br>2. Create a project and Add a Web App
+                    <br>3. Enable Realtime Database (Test Mode)
+                    <br>4. Open `06_arcade.html` in an editor and replace the `firebaseConfig` object at the bottom.
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 3: LOBBY =================== -->
+        <div id="view-lobby" class="view">
+            <h2 class="title-neon" style="font-size:3rem; margin-bottom:30px;">WAITING ROOM</h2>
+            <div class="lobby-content">
+                <div class="room-info">
+                    <h3 style="font-size:1.5rem; color:var(--text-dim);">ROOM CODE</h3>
+                    <div class="room-code" id="display-room-code">----</div>
+                    <p style="font-family:'Poppins'; color:var(--text-dim); font-size:.9rem; margin-bottom:20px;">Share this code with up to 3 friends.</p>
+                    <button id="btn-start-multi" class="arcade-btn hidden" style="width:100%;" onclick="startGame(currentGame)"><i class='bx bx-play'></i> START GAME</button>
+                    <p id="txt-wait-host" class="hidden" style="font-family:'Poppins'; color:var(--neon-cyan);">Waiting for host to start...</p>
+                </div>
+                <div class="player-list" id="lobby-players">
+                    <!-- Player items injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 4: ACTIVE GAME =================== -->
+        <div id="view-game" class="view">
+            <div class="scoreboard-side" id="in-game-scoreboard">
+                <div class="sb-title">LIVE SCORES</div>
+                <div id="sb-list"></div>
+            </div>
+
+            <div class="game-header">
+                <div class="round-info" id="game-round-ui">ROUND 1/10</div>
+                <h3 id="game-name-ui" style="color:var(--text-dim); font-size:1.2rem;">GAME NAME</h3>
+                <div class="score-info">
+                    <span class="score-lbl">SCORE</span>
+                    <div id="game-score-ui">0</div>
+                </div>
+            </div>
+            
+            <div class="timer-bar-wrap"><div class="timer-bar" id="game-timer-bar"></div></div>
+
+            <div id="game-state-msg" style="text-align:center; font-family:'Bebas Neue'; font-size:3rem; color:var(--neon-cyan); margin:40px 0; display:none;">GET READY...</div>
+
+            <!-- Frame Game Area -->
+            <div id="area-frame" class="frame-container hidden">
+                <div class="frame-img-box"><img id="frame-img" class="frame-img" src="" alt="Movie Frame"></div>
+                <div class="frame-options" id="frame-options"></div>
+            </div>
+
+            <!-- Dialogue Game Area -->
+            <div id="area-dialogue" class="dialogue-container hidden">
+                <div class="dialogue-box">
+                    <i class='bx bxs-quote-alt-left quotes-icon'></i>
+                    <p id="dialogue-text">"Quote goes here"</p>
+                </div>
+                <div class="dialogue-options" id="dialogue-options"></div>
+            </div>
+
+            <!-- Battle Game Area -->
+            <div id="area-battle" class="battle-container hidden">
+                <div class="battle-card" id="battle-card-1" onclick="submitBattle(0)">
+                    <img id="battle-img-1" src="" alt="Movie 1">
+                    <div class="battle-title" id="battle-title-1">Movie 1</div>
+                    <div class="battle-rating" id="battle-rate-1">8.5</div>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="battle-card" id="battle-card-2" onclick="submitBattle(1)">
+                    <img id="battle-img-2" src="" alt="Movie 2">
+                    <div class="battle-title" id="battle-title-2">Movie 2</div>
+                    <div class="battle-rating" id="battle-rate-2">7.2</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== VIEW 5: RESULTS =================== -->
+        <div id="view-results" class="view">
+            <h2 class="title-neon" style="font-size:4.5rem; margin-bottom:10px;">GAME OVER</h2>
+            
+            <div id="results-solo" class="results-container hidden">
+                <p style="font-family:'Poppins'; color:var(--text-dim);">FINAL SCORE</p>
+                <div class="solo-result" id="final-score-ui">0</div>
+                <div id="high-score-msg" style="color:var(--success); font-family:'Bebas Neue'; font-size:1.5rem; letter-spacing:2px; margin-bottom:30px; display:none;">NEW HIGH SCORE!</div>
+                <button class="arcade-btn" onclick="returnToMenu()"><i class='bx bx-undo'></i> BACK TO MENU</button>
+            </div>
+
+            <div id="results-multi" class="results-container hidden">
+                <div class="podium-wrap" id="podium-container">
+                    <!-- Podium items injected here -->
+                </div>
+                <button id="btn-play-again" class="arcade-btn hidden" onclick="startGame(currentGame)"><i class='bx bx-revision'></i> PLAY AGAIN</button>
+                <button class="arcade-btn purple" style="margin-left:10px;" onclick="leaveRoom()"><i class='bx bx-exit'></i> LEAVE ROOM</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Profile Overlay & Panel -->
+    <div class="profile-overlay" id="profile-overlay" onclick="toggleProfile()"></div>
+    <div class="profile-panel" id="profile-panel">
+        <div class="profile-hdr">
+            <button class="profile-close-btn" onclick="toggleProfile()"><i class='bx bx-x'></i></button>
+        </div>
+        <div class="profile-body" style="padding-top:0;">
+            <div style="position:relative; margin-bottom:30px;">
+                <div class="profile-avatar-lg" id="profile-avatar-lg" style="margin-bottom:0; overflow:hidden;">?</div>
+                <button onclick="changeAvatar()" style="position:absolute; bottom:0; right:0; background:var(--neon-cyan); border:none; color:#000; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 0 10px rgba(6,182,212,.5); font-size:1.2rem; transition:transform .3s;">
+                    <i class='bx bxs-camera'></i>
+                </button>
+            </div>
+            
+            <div class="profile-input-group">
+                <label>Character Name</label>
+                <input type="text" id="profile-name-input" class="arcade-input" style="max-width:100%;" placeholder="Enter new name...">
+            </div>
+            
+            <button id="btn-save-profile" class="arcade-btn hidden" style="width:100%; font-size:1rem; padding:10px;" onclick="saveProfile()"><i class='bx bx-save'></i> SAVE CHANGES</button>
+        </div>
+        <div class="profile-footer" style="margin-top:auto;">
+            <button class="arcade-btn purple" style="width:100%; border-color:var(--danger); color:var(--danger); font-size:1rem; padding:10px;" onclick="logout()">
+                <i class='bx bx-log-out-circle'></i> LOGOUT
+            </button>
+        </div>
+    </div>
+
+    <div class="msg-toast" id="toast">Message</div>
+
+    <!-- TMDB Setup -->
+    <script>
+        const TMDB_KEY = '52df95704200233ac0be06114624f980';
+        const IMG_URL_POSTER = 'https://image.tmdb.org/t/p/w500';
+        const IMG_URL_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
+        let tmdbPool = [];
+        let allTitles = [];
+        
+        const DIALOGUES = [
+            { q: "I'm going to make him an offer he can't refuse.", a: "The Godfather" },
+            { q: "May the Force be with you.", a: "Star Wars" },
+            { q: "You talking to me?", a: "Taxi Driver" },
+            { q: "I love the smell of napalm in the morning.", a: "Apocalypse Now" },
+            { q: "E.T. phone home.", a: "E.T. the Extra-Terrestrial" },
+            { q: "They may take our lives, but they'll never take our freedom!", a: "Braveheart" },
+            { q: "Here's looking at you, kid.", a: "Casablanca" },
+            { q: "You can't handle the truth!", a: "A Few Good Men" },
+            { q: "I'll be back.", a: "The Terminator" },
+            { q: "We're gonna need a bigger boat.", a: "Jaws" },
+            { q: "To infinity and beyond!", a: "Toy Story" },
+            { q: "Houston, we have a problem.", a: "Apollo 13" },
+            { q: "Keep your friends close, but your enemies closer.", a: "The Godfather Part II" },
+            { q: "Say 'hello' to my little friend!", a: "Scarface" },
+            { q: "I am your father.", a: "Star Wars: Episode V - The Empire Strikes Back" },
+            { q: "Why so serious?", a: "The Dark Knight" },
+            { q: "I see dead people.", a: "The Sixth Sense" },
+            { q: "There's no place like home.", a: "The Wizard of Oz" },
+            { q: "I am Iron Man.", a: "Iron Man" },
+            { q: "The first rule of Fight Club is: You do not talk about Fight Club.", a: "Fight Club" },
+            { q: "My precious.", a: "The Lord of the Rings: The Two Towers" },
+            { q: "I am groot.", a: "Guardians of the Galaxy" }
+        ];
+
+        // Pre-fetch pool on load
+        async function initTMDB() {
+            try {
+                // Fetch a few pages of popular movies for variety
+                const [p1, p2, p3] = await Promise.all([
+                    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&page=1`).then(r=>r.json()),
+                    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&page=2`).then(r=>r.json()),
+                    fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB_KEY}&page=1`).then(r=>r.json())
+                ]);
+                
+                const raw = [...p1.results, ...p2.results, ...p3.results];
+                // Filter ones with backdrop and poster
+                tmdbPool = dedupe(raw).filter(m => m.backdrop_path && m.poster_path && m.vote_average > 0);
+                allTitles = tmdbPool.map(m => m.title);
+            } catch(e) { console.error("TMDB load failed", e); showToast("Failed to load movie data."); }
+        }
+        
+        function dedupe(arr) {
+            const seen = new Set();
+            return arr.filter(el => { const d = seen.has(el.id); seen.add(el.id); return !d; });
+        }
+        
+        initTMDB();
+    </script>
+
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, updateProfile } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA81Gb34RwpjVU1w3l5eAxktd3BribOJzo",
+            authDomain: "cinephile-binge.firebaseapp.com",
+            databaseURL: "https://cinephile-binge-default-rtdb.firebaseio.com",
+            projectId: "cinephile-binge",
+            storageBucket: "cinephile-binge.firebasestorage.app",
+            messagingSenderId: "27110974960",
+            appId: "1:27110974960:web:b7b8c286054f0d3c046935",
+            measurementId: "G-F57QFGJBQ0"
+        };
+        
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getDatabase(app);
+            // Hide instruction banner if initialized without immediate error
+            document.getElementById('firebase-instructions').style.display = 'none';
+        } catch(e) {
+            console.error("Firebase init failed. Did you supply config?", e);
+        }
+
+        window.fbUpdateProfile = async (newName, newPhotoUrl) => {
+            if(!auth || !auth.currentUser) return false;
+            try {
+                await updateProfile(auth.currentUser, { 
+                    displayName: newName,
+                    photoURL: newPhotoUrl || ""
+                });
+                return true;
+            } catch (e) {
+                console.error(e);
+                return false;
+            }
+        };
+
+        // Make functions globally available for inline onclicks + game engine
+        window.fbCreateRoom = async (code, hostId, name) => {
+            if(!db) return alert("Firebase not configured!");
+            await set(ref(db, `rooms/${code}`), { state: 'lobby', host: hostId, game: '', currentRound: 0 });
+            await set(ref(db, `rooms/${code}/players/${hostId}`), { name: name, score: 0 });
+            // Auto delete if host disconnects
+            onDisconnect(ref(db, `rooms/${code}`)).remove();
+        };
+
+        window.fbJoinRoom = async (code, playerId, name) => {
+            if(!db) return false;
+            const snap = await get(ref(db, `rooms/${code}/state`));
+            if(!snap.exists() || snap.val() !== 'lobby') return false;
+            await set(ref(db, `rooms/${code}/players/${playerId}`), { name: name, score: 0 });
+            onDisconnect(ref(db, `rooms/${code}/players/${playerId}`)).remove();
+            return true;
+        };
+
+        window.fbLeaveRoom = async (code, playerId) => {
+            if(!db) return;
+            await remove(ref(db, `rooms/${code}/players/${playerId}`));
+        };
+
+        window.fbSetQuestions = async (code, gameData) => {
+            await set(ref(db, `rooms/${code}/questions`), gameData);
+        };
+
+        window.fbUpdateState = async (code, updates) => {
+            await update(ref(db, `rooms/${code}`), updates);
+        };
+
+        window.fbUpdateScore = async (code, playerId, score) => {
+            await set(ref(db, `rooms/${code}/players/${playerId}/score`), score);
+        };
+
+        window.fbUpdateAnswer = async (code, playerId, answerData) => {
+            await update(ref(db, `rooms/${code}/players/${playerId}`), { currentAnswer: answerData });
+        };
+        
+        window.fbClearAnswers = async (code) => {
+            const players = (await get(ref(db, `rooms/${code}/players`))).val();
+            if(!players) return;
+            const updates = {};
+            Object.keys(players).forEach(pid => updates[`players/${pid}/currentAnswer`] = null);
+            await update(ref(db, `rooms/${code}`), updates);
+        };
+
+        window.fbListenRoom = (code, callback) => {
+            if(!db) return;
+            const roomRef = ref(db, `rooms/${code}`);
+            window.currentRoomListener = onValue(roomRef, (snapshot) => {
+                callback(snapshot.val());
+            });
+        };
+        
+        window.fbStopListen = () => {
+            // Can't easily detach directly with onValue return in this simple setup
+            // Usually we'd use the unsubscribe function returned by onValue
+        };
+    </script>
+
+    <!-- Game Engine & State Management -->
+    <script>
+        // State
+        let me = { id: Math.random().toString(36).substr(2, 9), name: '', isHost: false };
+        let mode = 'solo'; // solo, multi
+        let roomCode = '';
+        let currentGame = ''; // frame, dialogue, battle
+        let questions = [];
+        let currentRound = 0;
+        let score = 0;
+        let streak = 0;
+        let roundActive = false;
+        let timerInterval;
+        let timeRemaining = 0;
+        let totalTime = 15;
+        let pRoomState = null; // previous DB state
+        
+        // Configs
+        const CFG = {
+            frame: { rounds: 10, time: 10 },
+            dialogue: { rounds: 10, time: 15 },
+            battle: { rounds: 20, time: 8 }
+        };
+
+        // Util
+        function g(id) { return document.getElementById(id); }
+        function showView(id) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); g(id).classList.add('active'); }
+        function showToast(msg) { const t = g('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
+        function rElem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function shuffle(arr) { for(let i=arr.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }        // Connect specific UI behaviors
+        document.addEventListener('DOMContentLoaded', () => {
+            getName();
+            
+            const input = document.getElementById('profile-name-input');
+            if(input) {
+                input.addEventListener('input', () => {
+                    const avatarUrl = localStorage.getItem('cinephile_avatar') || '';
+                    if (input.value.trim() !== me.name) {
+                        document.getElementById('btn-save-profile').classList.remove('hidden');
+                    } else {
+                        document.getElementById('btn-save-profile').classList.add('hidden');
+                    }
+                });
+            }
+        });
+
+        let currentAvatarUrl = localStorage.getItem('cinephile_avatar') || '';
+
+        function getName() {
+            me.name = localStorage.getItem('cinephile_user_name') || 'PLAYER';
+            currentAvatarUrl = localStorage.getItem('cinephile_avatar') || '';
+            
+            if(document.getElementById('nav-username')) {
+                document.getElementById('nav-username').textContent = me.name;
+                document.getElementById('profile-name-input').value = me.name;
+                
+                if (currentAvatarUrl) {
+                    document.getElementById('nav-initial').innerHTML = `<img src="${currentAvatarUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                    document.getElementById('profile-avatar-lg').innerHTML = `<img src="${currentAvatarUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                } else {
+                    document.getElementById('nav-initial').textContent = me.name.charAt(0).toUpperCase();
+                    document.getElementById('profile-avatar-lg').textContent = me.name.charAt(0).toUpperCase();
+                }
+            }
+            return me.name;
+        }
+
+        function changeAvatar() {
+            const url = prompt("Enter an Image URL for your new avatar (e.g., https://example.com/photo.jpg):", currentAvatarUrl);
+            if (url !== null) {
+                localStorage.setItem('cinephile_avatar', url.trim());
+                document.getElementById('btn-save-profile').classList.remove('hidden');
+                getName();
+            }
+        }
+
+        function toggleProfile() {
+            document.getElementById('profile-panel').classList.toggle('open');
+            document.getElementById('profile-overlay').classList.toggle('open');
+            getName(); // refresh values if opened
+            document.getElementById('btn-save-profile').classList.add('hidden');
+        }
+
+        async function saveProfile() {
+            const newName = document.getElementById('profile-name-input').value.trim();
+            const avatarUrl = localStorage.getItem('cinephile_avatar') || '';
+            
+            if(!newName) return showToast("Name cannot be empty!");
+            showToast("Saving...");
+            
+            localStorage.setItem('cinephile_user_name', newName); // instant local update
+            getName(); // refresh UI
+
+            if(window.fbUpdateProfile) {
+                await window.fbUpdateProfile(newName, avatarUrl);
+                showToast("Profile Updated!");
+            }
+            document.getElementById('btn-save-profile').classList.add('hidden');
+            toggleProfile();
+        }
+
+        function logout() {
+            localStorage.removeItem('cinephile_user_name');
+            window.location.href = '02_login.html';
+        }
+
+        // Initialize nav name on load
+        window.addEventListener('DOMContentLoaded', () => getName());
+
+        // ================= MENU ACTIONS =================
+        
+        function selectGame(gameType) {
+            currentGame = gameType;
+            const names = { 
+                frame: "<i class='bx bx-crop'></i> GUESS THE FRAME", 
+                dialogue: "<i class='bx bxs-quote-alt-left'></i> GUESS THE DIALOGUE", 
+                battle: "<i class='bx bxs-zap'></i> RATE BATTLE" 
+            };
+            g('setup-game-title').innerHTML = names[gameType];
+            showView('view-setup');
+        }
+
+        function startSolo() {
+            getName();
+            mode = 'solo';
+            startGame(currentGame);
+        }
+
+        function showMultiplayerSetup() {
+            g('multiplayer-setup').classList.remove('hidden');
+        }
+
+        async function createRoom() {
+            getName();
+            mode = 'multi';
+            me.isHost = true;
+            roomCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+            
+            showToast("Creating room...");
+            await window.fbCreateRoom(roomCode, me.id, me.name);
+            setupRoomListener();
+            
+            g('display-room-code').textContent = roomCode;
+            g('btn-start-multi').classList.remove('hidden');
+            g('txt-wait-host').classList.add('hidden');
+            showView('view-lobby');
+        }
+
+        async function joinRoom() {
+            const code = g('room-code-input').value.trim().toUpperCase();
+            if(code.length !== 6) return showToast("Invalid room code");
+            getName();
+            mode = 'multi';
+            me.isHost = false;
+            
+            showToast("Joining...");
+            const success = await window.fbJoinRoom(code, me.id, me.name);
+            if(!success) return showToast("Room not found or already started");
+            
+            roomCode = code;
+            setupRoomListener();
+            
+            g('display-room-code').textContent = roomCode;
+            g('btn-start-multi').classList.add('hidden');
+            g('txt-wait-host').classList.remove('hidden');
+            showView('view-lobby');
+        }
+
+        async function leaveRoom() {
+            if(mode === 'multi' && roomCode) {
+                await window.fbLeaveRoom(roomCode, me.id);
+            }
+            returnToMenu();
+        }
+
+        function returnToMenu() {
+            mode = 'solo'; roomCode = ''; me.isHost = false; score = 0; streak = 0; currentGame = '';
+            g('game-score-ui').textContent = '0';
+            g('in-game-scoreboard').classList.remove('visible');
+            g('multiplayer-setup').classList.add('hidden');
+            showView('view-game-select');
+        }
+
+        // ================= MULTIPLAYER SYNC =================
+
+        function setupRoomListener() {
+            window.fbListenRoom(roomCode, (data) => {
+                if(!data) { showToast("Room closed"); returnToMenu(); return; }
+                
+                // Update players
+                const players = data.players || {};
+                renderLobbyPlayers(players);
+                renderInGameScoreboard(players);
+                
+                // State transitions
+                const state = data.state;
+                if(!pRoomState || pRoomState !== state) {
+                    if(state === 'countdown' && !me.isHost) {
+                        currentGame = data.game;
+                        questions = data.questions || [];
+                        prepareGameUI();
+                        showView('view-game');
+                        runGameSequenceMulti_Client(); // Starts local sequence listening to currentRound
+                    }
+                    if(state === 'finished') {
+                        showMultiplayerResults(players);
+                    }
+                }
+                
+                // Round advancing for client
+                if(state === 'playing' && data.currentRound !== currentRound && !me.isHost) {
+                    currentRound = data.currentRound;
+                    loadQuestionUI(currentRound);
+                    startTimer();
+                }
+                
+                pRoomState = state;
+            });
+        }
+
+        function renderLobbyPlayers(players) {
+            const html = Object.keys(players).map(pid => {
+                const p = players[pid];
+                const isMe = pid === me.id;
+                const letter = p.name ? p.name.charAt(0) : '?';
+                return `<div class="player-item ${isMe?'is-me':''}">
+                            <div class="player-avatar">${letter}</div>
+                            <div class="player-name">${p.name}</div>
+                            ${pid === pRoomState?.host ? '<i class="bx bxs-crown" style="color:var(--gold)"></i>' : ''}
+                        </div>`;
+            }).join('');
+            g('lobby-players').innerHTML = html;
+        }
+
+        function renderInGameScoreboard(players) {
+            const sorted = Object.values(players).sort((a,b) => b.score - a.score);
+            g('sb-list').innerHTML = sorted.map(p => `
+                <div class="sb-player">
+                    <span>${p.name}</span> <span class="score">${p.score}</span>
+                </div>
+            `).join('');
+        }
+
+        // ================= GAME GENERATION =================
+
+        async function startGame(gameType) {
+            if(tmdbPool.length < 20) return showToast("Loading movies, please wait...");
+            currentGame = gameType;
+            score = 0; streak = 0; currentRound = 0;
+            g('game-score-ui').textContent = '0';
+            
+            // Generate Data
+            const cfg = CFG[gameType];
+            questions = [];
+            for(let i=0; i<cfg.rounds; i++) {
+                if(gameType === 'frame') questions.push(genFrameQ());
+                else if(gameType === 'dialogue') questions.push(genDialogueQ());
+                else if(gameType === 'battle') questions.push(genBattleQ());
+            }
+
+            if(mode === 'solo') {
+                prepareGameUI();
+                showView('view-game');
+                runGameSequenceSolo();
+            } else if(mode === 'multi' && me.isHost) {
+                showToast("Starting game for all players...");
+                await window.fbSetQuestions(roomCode, questions);
+                await window.fbUpdateState(roomCode, { state: 'countdown', game: gameType, currentRound: 0 });
+                prepareGameUI();
+                g('in-game-scoreboard').classList.add('visible');
+                showView('view-game');
+                runGameSequenceMulti_Host();
+            }
+        }
+
+        function genFrameQ() {
+            const correct = rElem(tmdbPool);
+            let decoys = shuffle([...tmdbPool]).filter(m=>m.id!==correct.id).slice(0,3);
+            let opts = shuffle([correct, ...decoys]);
+            return {
+                img: IMG_URL_BACKDROP + correct.backdrop_path,
+                correctId: correct.id,
+                options: opts.map(m => ({ id: m.id, title: m.title }))
+            };
+        }
+
+        function genDialogueQ() {
+            const correct = rElem(DIALOGUES);
+            let decoys = shuffle([...allTitles]).filter(t=>t!==correct.a).slice(0,3);
+            let opts = shuffle([correct.a, ...decoys]);
+            return {
+                quote: correct.q,
+                correctId: correct.a,
+                options: opts.map(t => ({ id: t.replace(/[^a-zA-Z0-9]/g, ''), title: t }))
+            };
+        }
+
+        function genBattleQ() {
+            let m1, m2;
+            do { m1 = rElem(tmdbPool); m2 = rElem(tmdbPool); } while(m1.id===m2.id || m1.vote_average === m2.vote_average);
+            const wId = (m1.vote_average > m2.vote_average) ? m1.id : m2.id;
+            return {
+                m1: { id: m1.id, title: m1.title, poster: IMG_URL_POSTER+m1.poster_path, rate: m1.vote_average.toFixed(1) },
+                m2: { id: m2.id, title: m2.title, poster: IMG_URL_POSTER+m2.poster_path, rate: m2.vote_average.toFixed(1) },
+                correctId: wId
+            };
+        }
+
+        // ================= GAME SEQUENCERS =================
+
+        function prepareGameUI() {
+            g('area-frame').classList.add('hidden');
+            g('area-dialogue').classList.add('hidden');
+            g('area-battle').classList.add('hidden');
+            g('game-state-msg').style.display = 'block';
+            
+            const names = { 
+                frame: "<i class='bx bx-crop'></i> GUESS THE FRAME", 
+                dialogue: "<i class='bx bxs-quote-alt-left'></i> GUESS THE DIALOGUE", 
+                battle: "<i class='bx bxs-zap'></i> RATE BATTLE" 
+            };
+            g('game-name-ui').innerHTML = names[currentGame];
+            g('game-round-ui').textContent = `PREPARING`;
+            totalTime = CFG[currentGame].time;
+        }
+
+        // SOLO FLOW
+        async function runGameSequenceSolo() {
+            await sleep(2000); 
+            for(let i=0; i<CFG[currentGame].rounds; i++) {
+                currentRound = i+1;
+                loadQuestionUI(currentRound);
+                await startTimer();
+                await showRoundResult();
+            }
+            endGameSolo();
+        }
+
+        // MULTI HOST FLOW
+        async function runGameSequenceMulti_Host() {
+            await sleep(2000);
+            for(let i=0; i<CFG[currentGame].rounds; i++) {
+                currentRound = i+1;
+                await window.fbClearAnswers(roomCode);
+                await window.fbUpdateState(roomCode, { state: 'playing', currentRound: currentRound });
+                loadQuestionUI(currentRound);
+                await startTimer(); // host timer drives the round length
+                await window.fbUpdateState(roomCode, { state: 'round_result' });
+                await showRoundResult();
+            }
+            await window.fbUpdateState(roomCode, { state: 'finished' });
+        }
+        
+        // MULTI CLIENT FLOW
+        function runGameSequenceMulti_Client() {
+            // Client flow is purely driven by FB listeners updating state,
+            // EXCEPT they display ready message initially.
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // ================= UI UPDATES =================
+
+        function loadQuestionUI(roundNum) {
+            roundActive = true;
+            g('game-state-msg').style.display = 'none';
+            g('game-round-ui').textContent = `ROUND ${roundNum}/${CFG[currentGame].rounds}`;
+            const q = questions[roundNum-1];
+
+            if(currentGame === 'frame') {
+                g('area-frame').classList.remove('hidden');
+                g('frame-img').src = q.img;
+                g('frame-options').innerHTML = q.options.map(o => 
+                    `<button class="frame-opt-btn" onclick="submitFrame(${o.id}, this)">${o.title}</button>`
+                ).join('');
+            } 
+            else if(currentGame === 'dialogue') {
+                g('area-dialogue').classList.remove('hidden');
+                g('dialogue-text').innerHTML = `"${q.quote}"`;
+                g('dialogue-options').innerHTML = q.options.map(o => 
+                    `<button class="frame-opt-btn" onclick="submitDialogue('${o.id}', this)">${o.title}</button>`
+                ).join('');
+            }
+            else if(currentGame === 'battle') {
+                g('area-battle').classList.remove('hidden');
+                g('battle-card-1').classList.remove('revealed','correct','wrong');
+                g('battle-card-2').classList.remove('revealed','correct','wrong');
+                g('battle-card-1').removeAttribute('disabled');
+                g('battle-card-2').removeAttribute('disabled');
+                g('battle-img-1').src = q.m1.poster; g('battle-title-1').textContent = q.m1.title; g('battle-rate-1').textContent = q.m1.rate;
+                g('battle-img-2').src = q.m2.poster; g('battle-title-2').textContent = q.m2.title; g('battle-rate-2').textContent = q.m2.rate;
+            }
+        }
+
+        function startTimer() {
+            return new Promise(resolve => {
+                timeRemaining = totalTime;
+                const bar = g('game-timer-bar');
+                bar.style.transition = 'none';
+                bar.style.width = '100%';
+                bar.className = 'timer-bar';
+                
+                // Force reflow
+                void bar.offsetWidth;
+                bar.style.transition = `width ${totalTime}s linear, background-color 1s`;
+                bar.style.width = '0%';
+                
+                let checkTimer = setInterval(() => {
+                    timeRemaining--;
+                    if(timeRemaining === Math.floor(totalTime/2)) bar.classList.add('warning');
+                    if(timeRemaining <= 3) bar.classList.add('danger');
+                    if(timeRemaining <= 0 || !roundActive) {
+                        clearInterval(checkTimer);
+                        resolve();
+                    }
+                }, 1000);
+            });
+        }
+
+        async function showRoundResult() {
+            roundActive = false;
+            const q = questions[currentRound-1];
+            
+            // Show answers
+            if(currentGame === 'frame') {
+                document.querySelectorAll('.frame-opt-btn').forEach(b => {
+                    b.disabled = true;
+                    if(b.getAttribute('onclick').includes(q.correctId)) b.classList.add('correct');
+                });
+            } else if(currentGame === 'dialogue') {
+                const cleanId = q.correctId.replace(/[^a-zA-Z0-9]/g, '');
+                document.querySelectorAll('.frame-opt-btn').forEach(b => {
+                    b.disabled = true;
+                    if(b.getAttribute('onclick').includes(`submitDialogue('${cleanId}'`)) b.classList.add('correct');
+                });
+            } else if(currentGame === 'battle') {
+                g('battle-card-1').classList.add('revealed');
+                g('battle-card-2').classList.add('revealed');
+                g('battle-card-1').setAttribute('disabled', 'true');
+                g('battle-card-2').setAttribute('disabled', 'true');
+                if(!g('battle-card-1').classList.contains('wrong') && !g('battle-card-1').classList.contains('correct')) {
+                    if(q.m1.id === q.correctId) g('battle-card-1').classList.add('correct');
+                    if(q.m2.id === q.correctId) g('battle-card-2').classList.add('correct');
+                }
+            }
+            
+            await sleep(2500); // look at answer time
+            
+            g('area-frame').classList.add('hidden');
+            g('area-dialogue').classList.add('hidden');
+            g('area-battle').classList.add('hidden');
+        }
+
+        function addScore(pts) {
+            score += pts;
+            const el = g('game-score-ui');
+            el.textContent = score;
+            el.classList.remove('score-pop');
+            void el.offsetWidth;
+            el.classList.add('score-pop');
+            if(mode === 'multi') window.fbUpdateScore(roomCode, me.id, score);
+        }
+
+        // ================= INTERACTIONS =================
+
+        function submitFrame(id, btn) {
+            if(!roundActive) return;
+            roundActive = false;
+            const q = questions[currentRound-1];
+            btn.classList.add(id === q.correctId ? 'correct' : 'wrong');
+            if(id === q.correctId) {
+                const bonus = timeRemaining > (totalTime/2) ? 50 : 0;
+                addScore(100 + bonus);
+            }
+            if(mode === 'multi') window.fbUpdateAnswer(roomCode, me.id, id);
+        }
+
+        function submitDialogue(id, btn) {
+            if(!roundActive) return;
+            roundActive = false;
+            const q = questions[currentRound-1];
+            const cleanId = q.correctId.replace(/[^a-zA-Z0-9]/g, '');
+            btn.classList.add(id === cleanId ? 'correct' : 'wrong');
+            if(id === cleanId) {
+                const bonus = timeRemaining > (totalTime/2) ? 50 : 0;
+                addScore(100 + bonus);
+            }
+            if(mode === 'multi') window.fbUpdateAnswer(roomCode, me.id, id);
+        }
+
+        function submitBattle(idx) {
+            if(!roundActive) return;
+            roundActive = false;
+            const q = questions[currentRound-1];
+            const c1 = g('battle-card-1'), c2 = g('battle-card-2');
+            c1.classList.add('revealed'); c2.classList.add('revealed');
+            
+            const pickedId = idx === 0 ? q.m1.id : q.m2.id;
+            const pickedCard = idx === 0 ? c1 : c2;
+            const otherCard  = idx === 0 ? c2 : c1;
+
+            if(pickedId === q.correctId) {
+                streak++;
+                pickedCard.classList.add('correct');
+                addScore(100 * streak); // multiplier
+                showToast(`Strike x${streak}!`);
+            } else {
+                streak = 0;
+                pickedCard.classList.add('wrong');
+                otherCard.classList.add('correct');
+            }
+            if(mode === 'multi') window.fbUpdateAnswer(roomCode, me.id, pickedId);
+        }
+
+        // ================= RESULTS =================
+
+        function endGameSolo() {
+            showView('view-results');
+            g('results-solo').classList.remove('hidden');
+            g('results-multi').classList.add('hidden');
+            g('final-score-ui').textContent = score;
+
+            // Handle HS
+            const key = `cinephile_hs_${currentGame}`;
+            const hs = parseInt(localStorage.getItem(key) || '0');
+            if(score > hs) {
+                localStorage.setItem(key, score);
+                g('high-score-msg').style.display = 'block';
+            } else {
+                g('high-score-msg').style.display = 'none';
+            }
+        }
+
+        function showMultiplayerResults(players) {
+            g('in-game-scoreboard').classList.remove('visible');
+            showView('view-results');
+            g('results-solo').classList.add('hidden');
+            g('results-multi').classList.remove('hidden');
+            
+            const sorted = Object.values(players).sort((a,b) => b.score - a.score).slice(0,3);
+            let html = '';
+            
+            // Build podiums (2, 1, 3 order visually)
+            const p2 = sorted[1]; const p1 = sorted[0]; const p3 = sorted[2];
+            
+            if(p2) html += makePodium(p2, 2);
+            if(p1) html += makePodium(p1, 1);
+            if(p3) html += makePodium(p3, 3);
+            
+            g('podium-container').innerHTML = html;
+            
+            if(me.isHost) g('btn-play-again').classList.remove('hidden');
+        }
+
+        function makePodium(p, rank) {
+            return `
+            <div class="podium rank-${rank}">
+                <div class="podium-score">${p.score}</div>
+                <div class="podium-avatar">${p.name.charAt(0)}</div>
+                <div class="podium-name">${p.name}</div>
+                <div class="podium-bar">#${rank}</div>
+            </div>`;
+        }
+
+    </script>
+</body>
+</html>

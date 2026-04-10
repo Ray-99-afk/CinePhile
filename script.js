@@ -16,29 +16,3 @@ if (container && registerBtn && loginBtn) {
     });
 }
 
-/* =========================================
-   2. REDIRECT LOGIC (Go to Dashboard)
-   ========================================= */
-
-// Select the actual forms
-const signInForm = document.querySelector('.sign-in form');
-const signUpForm = document.querySelector('.sign-up form');
-
-// Handle Login Submit
-if (signInForm) {
-    signInForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Stop the page from reloading
-        // Here you would usually check password, but for now:
-        window.location.href = "03_dashboard.html"; 
-    });
-}
-
-// Handle Sign Up Submit
-if (signUpForm) {
-    signUpForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Stop the page from reloading
-        // Redirect to dashboard after signup
-        window.location.href = "03_dashboard.html"; 
-    });
-}
-

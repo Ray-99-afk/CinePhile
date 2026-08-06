@@ -18,7 +18,9 @@ CinePhile is a dynamic web application for movie enthusiasts, featuring a fully 
 3. Run: Open index.html in your browser (or start your local dev server) to view the dashboard.
 
 👤 Author
+
 Aryan
+
 GitHub: @Ray-99-afk
 
 Portfolio: aryan-chauhan-dev.netlify.app

@@ -20,4 +20,5 @@ CinePhile is a dynamic web application for movie enthusiasts, featuring a fully 
 👤 Author
 Aryan
 GitHub: @Ray-99-afk
+
 Portfolio: aryan-chauhan-dev.netlify.app
